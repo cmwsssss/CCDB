@@ -47,8 +47,6 @@ extension CCModelSavingable {
             return Float32(value)
         } else if (targetType == Float64.self) {
             return Float64(value)
-        } else if (targetType == Float80.self) {
-            return Float80(value)
         }
         return nil
     }
