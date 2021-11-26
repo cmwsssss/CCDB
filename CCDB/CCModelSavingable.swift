@@ -218,11 +218,6 @@ protocol CCModelSavingable : CCModelCacheable, CCDBTransactionable, CCDBTableEdi
      */
     static func addViewNotifier(notifier: @escaping ()->Void)
     
-    static func addViewNotifier(notifier: CCViewModel)
-    
-    static func removeViewNotifier(notifier: CCViewModel)
-    
-    
 }
 
 extension CCModelSavingable {
@@ -393,17 +388,4 @@ extension CCModelSavingable {
         propertyMapper?.viewNotifier.append(notifier)
     }
     
-    static func addViewNotifier(notifier: CCViewModel) {
-        let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self)
-        propertyMapper?.needNotifierViews.append(notifier)
-    }
-    
-    static func removeViewNotifier(notifier: CCViewModel) {
-        if let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) {
-            propertyMapper.needNotifierViews = propertyMapper.needNotifierViews.filter({ view in
-                return view.id != notifier.id
-            })
-        }
-        
-    }
 }

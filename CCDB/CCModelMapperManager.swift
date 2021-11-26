@@ -19,7 +19,6 @@ class CCModelPropertyMapper {
     var replaceSql: String?
     var initSql: String?
     var viewNotifier = [()->Void]()
-    var needNotifierViews = [CCViewModel]()
     var needNotifierObject = [CCModelSavingable]()
 }
 
