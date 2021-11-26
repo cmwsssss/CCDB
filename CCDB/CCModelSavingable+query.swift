@@ -168,9 +168,10 @@ extension CCModelSavingable {
             }
             
             var object = modelInit()
-            if let objectType = type(of: object) as? CCModelSavingable.Type {
-                object = objectType.initWithPrimaryPropertyValue(value.primaryValue) ?? modelInit()
+            guard let objectType = type(of: object) as? CCModelSavingable.Type else {
+                return
             }
+            object = objectType.initWithPrimaryPropertyValue(value.primaryValue) ?? modelInit()
             propertyMapper.needNotifierObject.append(object as! CCModelSavingable)
             
 //            self.updateWithDBData(object: &object, primaryValue: value.primaryValue, propertyMapper: propertyMapper, type:value.propertyDetail.type, dbInstance: dbInstance)
@@ -229,7 +230,10 @@ extension CCModelSavingable {
             return nil
         }
         var object = modelInit()
-        propertyMapper.needNotifierObject.append(object as! CCModelSavingable)
+        guard let needNotifier = object as? CCModelSavingable else {
+            return nil
+        }
+        propertyMapper.needNotifierObject.append(needNotifier)
         self.updateWithDBData(object: &object, primaryValue: value, propertyMapper: propertyMapper, type: Self.self, dbInstance: dbInstance)
         guard let res = object as? Self else {
             return nil

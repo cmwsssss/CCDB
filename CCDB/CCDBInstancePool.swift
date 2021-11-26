@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-class CCDBInstance {
+public class CCDBInstance {
     var queue : DispatchQueue
     var instance : OpaquePointer?
     var dicStatments : [String : CCDBStatement] = Dictionary()

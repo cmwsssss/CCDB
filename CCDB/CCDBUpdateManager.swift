@@ -50,7 +50,6 @@ class CCDBUpdateManager : CCDBTransactionable {
             dbInstance.queue.async {
                 let date = Date()
                 self.beginTransaction(dbInstance)
-                print("begin: \(self.models.count)")
                 for model in self.models {
                     if let updateModel = model as? CCDBUpdateModel {
                         updateModel.model?._replaceIntoDB(dbInstance: dbInstance, containerId: updateModel.containerId ?? 0, top: updateModel.top)
@@ -62,7 +61,6 @@ class CCDBUpdateManager : CCDBTransactionable {
                     }
                 }
                 self.commitTransaction(dbInstance)
-                print("end: \(date.timeIntervalSinceNow)")
                 self.models.removeAll()
                 self.updateLock.signal()
                 self.replaceIntoDB()

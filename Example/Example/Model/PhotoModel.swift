@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CCDB
 
 class PhotoModel: CCModelSavingable, Decodable {
     

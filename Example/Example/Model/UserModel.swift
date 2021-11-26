@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import CCDB
 class UserModel: CCModelSavingable, ObservableObject, Identifiable, Decodable {
     var userId = ""
     @Published var username = ""

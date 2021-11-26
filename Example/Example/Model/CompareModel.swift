@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import CCDB
 class CompareModel: CCModelSavingable {
     var compareId = 0
     var param1 = "param1"
@@ -18,8 +18,6 @@ class CompareModel: CCModelSavingable {
     var param7 = "param7"
     
     static func modelConfiguration() -> CCModelConfiguration {
-        var config = CCModelConfiguration()
-        config.modelInit = CompareModel.init
-        return config
+        return CCModelConfiguration(modelInit: CompareModel.init)
     }
 }

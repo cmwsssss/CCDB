@@ -8,24 +8,23 @@
 import Foundation
 import Combine
 
-
-extension CCModelSavingable {
+public extension CCModelSavingable {
     
-    static func headPointerOfStruct(target: inout Any) -> UnsafeMutablePointer<Byte> {
+    private static func headPointerOfStruct(target: inout Any) -> UnsafeMutablePointer<Byte> {
 
         return withUnsafeMutablePointer(to: &target) {
             return UnsafeMutableRawPointer($0).bindMemory(to: Byte.self, capacity: 8)
         }
     }
     
-    static func headPointerOfClass(target: Any) -> UnsafeMutablePointer<Byte> {
+    private static func headPointerOfClass(target: Any) -> UnsafeMutablePointer<Byte> {
 
         let opaquePointer = Unmanaged.passUnretained(target as AnyObject).toOpaque()
         let mutableTypedPointer = opaquePointer.bindMemory(to: Byte.self, capacity: 8)
         return UnsafeMutablePointer<Byte>(mutableTypedPointer)
     }
     
-    static func writePublisedValue(value: Any, finalLevel: Bool, inValueType: Any.Type, inValue: Any) -> Any? {
+    private static func writePublisedValue(value: Any, finalLevel: Bool, inValueType: Any.Type, inValue: Any) -> Any? {
         let mirror = Mirror(reflecting: value)
         if finalLevel {
             for child in mirror.children {

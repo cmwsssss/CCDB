@@ -12,7 +12,7 @@ key-value Memory cache (Key-value式的内存缓存)
  
  CCDB writes the model objects to the memory cache before the actual database operations are performed, this protocol can also be used separately (在进行实际的数据库操作之前，CCDB会先将模型对象写入内存缓存之中，该协议也可以单独使用)
 */
-protocol CCModelCacheable {
+public protocol CCModelCacheable {
     
     /**
      Replace object into memory cache (将当前模型对象写入内存缓存)
@@ -92,10 +92,10 @@ protocol CCModelCacheable {
     static func removeAllFromCache(containerId: Int)
 }
 
-extension CCModelCacheable {
+public extension CCModelCacheable {
     
     
-    public func replaceIntoCache() {
+    func replaceIntoCache() {
         let mirror:Mirror = Mirror(reflecting: self)
         let value = mirror.children[mirror.children.startIndex].value
         if let primaryValue = value as? AnyHashable {

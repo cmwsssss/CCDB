@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-enum CCModelAction {
+public enum CCModelAction {
     case CCModelActionInitWithPrimary((AnyHashable)->Any?, value:AnyHashable)
     case CCModelActionReplaceIntoDB(containerId: Int?, top: Bool)
     case CCModelActionQuery((CCDBCondition)->[Any], condition:CCDBCondition)
@@ -46,7 +46,7 @@ enum CCModelAction {
  
  )
  */
-protocol CCModelSavingable : CCModelCacheable, CCDBTransactionable, CCDBTableEditable, _Measurable {
+public protocol CCModelSavingable : CCModelCacheable, CCDBTransactionable, CCDBTableEditable, _Measurable {
     
     /**
      Configuration of the model (对模型进行配置)
@@ -217,10 +217,10 @@ protocol CCModelSavingable : CCModelCacheable, CCDBTransactionable, CCDBTableEdi
      ```
      */
     static func addViewNotifier(notifier: @escaping ()->Void)
-    
+        
 }
 
-extension CCModelSavingable {
+public extension CCModelSavingable {
         
     static func performAction(action: CCModelAction) -> Any? {
         self.nextEditTableAction()
@@ -387,5 +387,7 @@ extension CCModelSavingable {
         let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self)
         propertyMapper?.viewNotifier.append(notifier)
     }
+    
+    
     
 }

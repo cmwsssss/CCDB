@@ -8,7 +8,7 @@
 
 import Foundation
 
-typealias Byte = Int8
+public typealias Byte = Int8
 
 public protocol _Measurable {}
 

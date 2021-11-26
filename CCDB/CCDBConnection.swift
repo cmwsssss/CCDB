@@ -7,7 +7,7 @@
 
 import Foundation
 import SQLite3
-class CCDBConnection {
+public class CCDBConnection {
     
     static var needUpgrade = false
     static var needCreate = true
@@ -38,7 +38,7 @@ class CCDBConnection {
      - parameter version: Current version of the database (当前数据库的版本号)
      */
     
-    static func initializeDBWithVersion(_ version: String) {
+    public static func initializeDBWithVersion(_ version: String) {
         let dbFileName = "ccdb-" + version + ".db"
         let dbWalFile = "ccdb-" + version + ".db-wal"
         let dbShmFile = "ccdb-" + version + ".db-shm"

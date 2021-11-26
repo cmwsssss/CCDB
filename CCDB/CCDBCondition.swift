@@ -18,7 +18,12 @@ import Foundation
             .ccIsAsc(isAsc: false)
  ```
  */
-class CCDBCondition {
+public class CCDBCondition {
+    
+    public init() {
+        
+    }
+    
     var isAsc :Bool = true
     var limit :Int?
     var offset :Int?
@@ -62,32 +67,32 @@ class CCDBCondition {
         return sql
     }
     
-    func ccIsAsc(isAsc: Bool)->Self {
+    public func ccIsAsc(isAsc: Bool)->Self {
         self.isAsc = isAsc
         return self
     }
     
-    func ccLimit(limit: Int)->Self {
+    public func ccLimit(limit: Int)->Self {
         self.limit = limit
         return self
     }
     
-    func ccOffset(offset: Int)->Self {
+    public func ccOffset(offset: Int)->Self {
         self.offset = offset
         return self
     }
     
-    func ccWhere(whereSql: String)->Self {
+    public func ccWhere(whereSql: String)->Self {
         self.whereSql = whereSql
         return self
     }
     
-    func ccOrderBy(orderBy: String)->Self {
+    public func ccOrderBy(orderBy: String)->Self {
         self.orderBy = orderBy
         return self
     }
     
-    func ccContainerId(containerId: Int)->Self {
+    public func ccContainerId(containerId: Int)->Self {
         self.containerId = containerId
         return self
     }

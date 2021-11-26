@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CCDB
 class MainViewModel: ObservableObject {
     @Published var datas = [MainViewCellModel]()
     @Published var shouldGo15UserList = false
@@ -25,22 +26,22 @@ class MainViewModel: ObservableObject {
             self.shouldGoAllUserList.toggle()
         }))
         
-        self.datas.append(MainViewCellModel(name: "写入测试", clickHandler: {
+        self.datas.append(MainViewCellModel(name: "10000次批量写入测试", clickHandler: {
             self.writeTest()
         }))
         
-        self.datas.append(MainViewCellModel(name: "读取测试", clickHandler: {
+        self.datas.append(MainViewCellModel(name: "批量读取测试", clickHandler: {
             self.loadTest()
         }))
         
-        self.datas.append(MainViewCellModel(name: "10000次读取测试", clickHandler: {
+        self.datas.append(MainViewCellModel(name: "10000次分开读取测试", clickHandler: {
             self.loadSingleData()
         }))
     }
     
     func loadTest() {
         let date = Date()
-        let datas = CompareModel.queryAll(false)
+        CompareModel.queryAll(false)
         print("finish \(date.timeIntervalSinceNow)")
     }
     
@@ -57,7 +58,7 @@ class MainViewModel: ObservableObject {
     func loadSingleData() {
         let date = Date()
         for i in 0...10000 {
-            let model = CompareModel.initWithPrimaryPropertyValue(i)
+            CompareModel.initWithPrimaryPropertyValue(i)
         }
         print("finish \(date.timeIntervalSinceNow)")
     }

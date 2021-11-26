@@ -7,10 +7,15 @@
 
 import Foundation
 
-struct CCModelConfiguration {
-    var modelInit: (()->Any)?
-    var intoDBMapper : ((Any)->String)?
-    var outDBMapper : ((Any, String)->())?
-    var inOutPropertiesMapper = [String: Bool]()
-    var publishedTypeMapper = [String: Any.Type]()
+public struct CCModelConfiguration {
+    
+    public init(modelInit: @escaping ()->Any) {
+        self.modelInit = modelInit
+    }
+    
+    public var modelInit: (()->Any)
+    public var intoDBMapper : ((Any)->String)?
+    public var outDBMapper : ((Any, String)->())?
+    public var inOutPropertiesMapper = [String: Bool]()
+    public var publishedTypeMapper = [String: Any.Type]()
 }

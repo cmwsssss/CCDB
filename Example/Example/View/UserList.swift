@@ -100,6 +100,11 @@ struct UserList: View {
         .refreshable {
             self.viewModel.refreshData()
         }
+        .onAppear(perform: {
+            if self.viewModel.users.count == 0 {
+                self.viewModel.refreshData()
+            }
+        })
         .navigationTitle(self.viewModel.title)
     }
 }

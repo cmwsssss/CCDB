@@ -8,14 +8,14 @@
 import Foundation
 import SQLite3
 
-protocol CCDBTransactionable {
+public protocol CCDBTransactionable {
     func beginTransaction(_ instance : CCDBInstance)
     func commitTransaction(_ instance : CCDBInstance)
     func rollbackTransaction(_ instance : CCDBInstance)
 
 }
 
-extension CCDBTransactionable {
+public extension CCDBTransactionable {
     
     func beginTransaction(_ instance : CCDBInstance) {
         let csql = "BEGIN".cString(using: String.Encoding.utf8)

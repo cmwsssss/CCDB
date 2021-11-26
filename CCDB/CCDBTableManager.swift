@@ -20,11 +20,11 @@ class CCDBTableManager {
     var dicTableInitialized : [String : Bool] = Dictionary()
 }
 
-protocol CCDBTableEditable {
+public protocol CCDBTableEditable {
     func nextEditTableAction()
 }
 
-extension CCDBTableEditable {
+public extension CCDBTableEditable {
     
     static private var createTableSql : String? {
         let typeName = String(describing: Self.self)
