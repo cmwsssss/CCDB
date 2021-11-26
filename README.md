@@ -1,5 +1,5 @@
 # CCDB是什么
-CCDB是基于Sqlite3和Swift编写的高性能ORM，非常适合用于SwiftUI的的开发
+CCDB是基于Sqlite3和Swift编写的高性能数据库框架，非常适合用于SwiftUI的的开发
 
 ## 基本特性介绍
 
