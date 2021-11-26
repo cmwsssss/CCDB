@@ -21,12 +21,19 @@ CCDB生成的对象，在内存里面只会有一份拷贝，这也是适配Swif
 ## 使用教程
 
 #### 1. 环境要求
-CCDB支持 iOS 10 以上
+CCDB支持 iOS 13 以上
 
 #### 2. 安装
-待完成
+pod 'CCDB'
 
-#### 3. 模型接入
+#### 3. 初始化数据库
+在使用CCDB相关API之前要先调用初始化方法
+```
+CCDBConnection.initializeDBWithVersion("1.0")
+```
+如果数据模型属性有变化，需要升级数据库时，更改verson即可
+
+#### 4. 模型接入
 
 ##### 1. 继承CCModelSavingable协议
 **注意：CCDB的模型必须要有一个主键，该主键为模型属性中的第一个属性**
@@ -121,7 +128,7 @@ static func outDBMapper(instance: Any, rawData: String) {
     }
 }
 ```
-##### 4. 支持@Published：
+##### 5. 支持@Published：
 如果你希望模型属性值绑定到SwiftUI的页面元素，则需要使用@Published来包装属性，这些被包装的属性同样需要在modelConfiguration内进行配置
 ```
 class UserModel: CCModelSavingable {
@@ -143,14 +150,14 @@ static func modelConfiguration() -> CCModelConfiguration {
 }
 ```
 
-#### 4.更新和插入
+#### 6.更新和插入
 对于CCDB来说，操作都是基于CCModelSavingable对象的，**对象必须具有主键**，因此更新和插入都是下面这句代码，如果数据内没有该主键对应数据，则会插入，否则则会更新。
 **CCDB不提供批量写入接口，CCDB会自动建立写入事务并优化**
 ```
 userModel.replaceIntoDB()
 ```
 
-#### 5.查询
+#### 7.查询
 CCDB提供了针对单独对象的主键查询，批量查询和条件查询的接口
 
 ##### 主键查询
@@ -181,7 +188,7 @@ let res = UserModel.query(condition)
 let count = UserModel.count(condition)
 ```
 
-#### 6. 删除
+#### 8. 删除
 * 删除单个对象
 ```
 userModel.removeFromDB()
@@ -191,7 +198,7 @@ userModel.removeFromDB()
 UserModel.removeAll()
 ```
 
-#### 7. 索引
+#### 9. 索引
 * 建立索引
 ```
 //给Age属性建立索引
@@ -203,7 +210,7 @@ UserModel.createIndex("Age")
 UserModel.removeIndex("Age")
 ```
 
-#### 8. Container
+#### 10. Container
 Container是一种列表数据的解决方案，可以将各个列表的值写入到Container内，Container表内数据不是单独的拷贝，其与数据表的数据相关联
 
 ```
@@ -218,7 +225,7 @@ let allBenzCar = Car.queryAll(false, withContainerId: 1)
 ```
 Container的数据存取在CCDB内部同样有过专门优化，可以不用考虑性能问题
 
-#### 9. SwiftUI适配
+#### 11. SwiftUI适配
 CCDB支持@Published包装器，只需要添加几句代码，当被包装的属性发生变更时，就可以通知界面进行更新
 
 ```
