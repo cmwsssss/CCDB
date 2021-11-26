@@ -43,9 +43,6 @@ class CCModelNotifierManager {
                         for notifier in propertyMapper.viewNotifier {
                             notifier()
                         }
-                        for notifier in propertyMapper.needNotifierViews {
-                            notifier.objectWillChange.send()
-                        }
                     }
                 }
                 self.needNotifyType.removeAll()
