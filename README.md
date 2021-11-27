@@ -128,7 +128,7 @@ static func outDBMapper(instance: Any, rawData: String) {
     }
 }
 ```
-##### 5. 支持@Published：
+#### 5. 支持@Published：
 如果你希望模型属性值绑定到SwiftUI的页面元素，则需要使用@Published来包装属性，这些被包装的属性同样需要在modelConfiguration内进行配置
 ```
 class UserModel: CCModelSavingable {
