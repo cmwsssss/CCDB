@@ -161,7 +161,8 @@ static func modelConfiguration() -> CCModelConfiguration {
 
 #### 6.Update and insert
 For CCDB, the operations are based on CCModelSavingable objects, **objects must have primary property**, so update and insert are the following code, if there is no data corresponding to that primary key within the data, it will be inserted, otherwise it will be updated.
-**CCDB does not provide batch write, CCDB will automatically create write transactions and optimize them **
+
+**CCDB does not provide batch write, CCDB will automatically create write transactions and optimize them**
 ```
 userModel.replaceIntoDB()
 ```
