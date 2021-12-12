@@ -182,7 +182,7 @@ let count = UserModel.count()
 ```
 * Get all objects of the model
 ```
-let users = UserModel.queryAll(isAsc: false)    //倒序 
+let users = UserModel.queryAll(isAsc: false)
 ```
 
 ##### Conditional queries
@@ -195,12 +195,13 @@ condition.ccWhere(whereSql: "age > 30").ccOrderBy(orderBy: "age").ccLimit(limit:
 
 //Query users according to the conditions
 let res = UserModel.query(condition)
+
 //Get count of users according to the conditions
 let count = UserModel.count(condition)
 ```
 
 #### Delete
-* Delete a object
+* Delete an object
 ```
 userModel.removeFromDB()
 ```
