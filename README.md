@@ -1,4 +1,4 @@
-中文版本请参看[这里](https://github.com/cmwsssss/CCDB/blob/main/README-CN.md)
+中文版本请[点击这里](https://github.com/cmwsssss/CCDB/blob/main/README-CN.md)
 
 # What's CCDB
 CCDB is a high-performance database framework based on Sqlite3 and Swift, ideal for SwiftUI development
