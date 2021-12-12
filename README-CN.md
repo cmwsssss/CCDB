@@ -218,7 +218,7 @@ UserModel.createIndex("Age")
 UserModel.removeIndex("Age")
 ```
 
-#### 10. Container
+#### Container
 Container是一种列表数据的解决方案，可以将各个列表的值写入到Container内，Container表内数据不是单独的拷贝，其与数据表的数据相关联
 
 ```
@@ -236,7 +236,7 @@ glc.removeFromDB(containerId: 1)
 ```
 Container的数据存取在CCDB内部同样有过专门优化，可以不用考虑性能问题
 
-#### 11. SwiftUI适配
+#### SwiftUI适配
 CCDB支持@Published包装器，只需要添加几句代码，当被包装的属性发生变更时，就可以通知界面进行更新
 
 ```
