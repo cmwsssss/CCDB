@@ -159,7 +159,7 @@ static func modelConfiguration() -> CCModelConfiguration {
 }
 ```
 
-#### 6.Update and insert
+#### Update and insert
 For CCDB, the operations are based on CCModelSavingable objects, **objects must have primary property**, so update and insert are the following code, if there is no data corresponding to that primary key within the data, it will be inserted, otherwise it will be updated.
 
 **CCDB does not provide batch write, CCDB will automatically create write transactions and optimize them**
@@ -167,7 +167,7 @@ For CCDB, the operations are based on CCModelSavingable objects, **objects must 
 userModel.replaceIntoDB()
 ```
 
-#### 7.Query
+#### Query
 CCDB support query by primary key, batch queries and conditional queries
 
 ##### Query by primary key
@@ -239,7 +239,7 @@ glc.removeFromDB(containerId: 1)
 ```
 Container data access has also been optimized within CCDB
 
-#### 11. SwiftUI适配
+#### Adapted to SwiftUI
 CCDB supports @Published, just add a few lines of code to notify the UI for updates when the property changes
 
 ```
