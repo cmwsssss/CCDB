@@ -21,22 +21,22 @@ CCDB生成的对象，在内存里面只会有一份拷贝，这也是适配Swif
 
 ## 使用教程
 
-#### 1. 环境要求
+#### 环境要求
 CCDB支持 iOS 13 以上
 
-#### 2. 安装
+#### 安装
 pod 'CCDB'
 
-#### 3. 初始化数据库
+#### 初始化数据库
 在使用CCDB相关API之前要先调用初始化方法
 ```
 CCDBConnection.initializeDBWithVersion("1.0")
 ```
 如果数据模型属性有变化，需要升级数据库时，更改verson即可
 
-#### 4. 模型接入
+#### 模型接入
 
-##### 1. 继承CCModelSavingable协议
+##### 继承CCModelSavingable协议
 **注意：CCDB的模型必须要有一个主键，该主键为模型属性中的第一个属性**
 ```
 class UserModel: CCModelSavingable {
@@ -44,7 +44,7 @@ class UserModel: CCModelSavingable {
     ...
 }
 ```
-##### 2. 在该模型文件内实现modelConfiguration方法
+##### 在该模型文件内实现modelConfiguration方法
 ```
 static func modelConfiguration() -> CCModelConfiguration {
     var configuration = CCModelConfiguration(modelInit: UserModel.init)
@@ -55,7 +55,7 @@ static func modelConfiguration() -> CCModelConfiguration {
 做完上面两步以后，就可以开始使用该模型进行数据库操作了。
 CCDB支持的类型有：Int，String，Double，Float，Bool以及继承自CCModelSavingable的类。
 
-##### 3. 自定义类型：
+##### 自定义类型：
 如果模型属性中有一些CCDB不支持的类型，比如数组，字典，或者非CCModelSavingable的对象，则需要一些额外的代码来对这些数据进行编解码后保存和读取
 ```
 class UserModel: CCModelSavingable {
@@ -69,12 +69,17 @@ class UserModel: CCModelSavingable {
 //在该处对特殊属性进行配置
 static func modelConfiguration() -> CCModelConfiguration {
     var configuration = CCModelConfiguration(modelInit: UserModel.init)
-    //Photos属性为自定义属性，不自动解析
+    //对photoIds的值进行手动处理
     configuration.inOutPropertiesMapper["photoIds"] = true  
-    //height属性为自定义属性，不自动解析
+    
+    //对height的值进行手动处理
     configuration.inOutPropertiesMapper["height"] = true  
-    configuration.intoDBMapper = intoDBMapper //自定义属性的编码方法
-    configuration.outDBMapper = outDBMapper //自定义属性的解码方法
+    
+    //指定自定义属性的编码方法
+    configuration.intoDBMapper = intoDBMapper 
+    
+    //指定自定义属性的解码方法
+    configuration.outDBMapper = outDBMapper 
     ...
     return configuration
 }
@@ -129,7 +134,7 @@ static func outDBMapper(instance: Any, rawData: String) {
     }
 }
 ```
-#### 5. 支持@Published：
+#### 支持@Published：
 如果你希望模型属性值绑定到SwiftUI的页面元素，则需要使用@Published来包装属性，这些被包装的属性同样需要在modelConfiguration内进行配置
 ```
 class UserModel: CCModelSavingable {
@@ -151,14 +156,14 @@ static func modelConfiguration() -> CCModelConfiguration {
 }
 ```
 
-#### 6.更新和插入
+#### 更新和插入
 对于CCDB来说，操作都是基于CCModelSavingable对象的，**对象必须具有主键**，因此更新和插入都是下面这句代码，如果数据内没有该主键对应数据，则会插入，否则则会更新。
 **CCDB不提供批量写入接口，CCDB会自动建立写入事务并优化**
 ```
 userModel.replaceIntoDB()
 ```
 
-#### 7.查询
+#### 查询
 CCDB提供了针对单独对象的主键查询，批量查询和条件查询的接口
 
 ##### 主键查询
@@ -183,13 +188,15 @@ CCDB的条件配置是通过CCDBCondition的对象来完成的
 let condition = CCDBCondition()
 //cc相关方法没有顺序先后之分
 condition.ccWhere(whereSql: "Age > 30").ccOrderBy(orderBy: "Age").ccLimit(limit: 30).ccOffset(offset: 0).ccIsAsc(isAsc: false)
+
 //根据条件查询对应用户
 let res = UserModel.query(condition)
+
 //根据条件获取对应的用户数量
 let count = UserModel.count(condition)
 ```
 
-#### 8. 删除
+#### 删除
 * 删除单个对象
 ```
 userModel.removeFromDB()
@@ -199,7 +206,7 @@ userModel.removeFromDB()
 UserModel.removeAll()
 ```
 
-#### 9. 索引
+#### 索引
 * 建立索引
 ```
 //给Age属性建立索引
@@ -218,11 +225,14 @@ Container是一种列表数据的解决方案，可以将各个列表的值写�
 let glc = Car()
 glc.name = "GLC 300"
 glc.brand = "Benz"
-// 假设Benz车的containerId为1，这里会将glc写入benz车的列表容器内
+// 假设Benz车的containerId为1，这里会将glc写入Benz车的列表容器内
 glc.replaceIntoDB(containerId: 1, top: false)
 
-//获取所有属于Benz车的列表数据
+//获取所有Benz车的列表数据
 let allBenzCar = Car.queryAll(false, withContainerId: 1)
+
+//将glc从Benz车列表中移除
+glc.removeFromDB(containerId: 1)
 ```
 Container的数据存取在CCDB内部同样有过专门优化，可以不用考虑性能问题
 
