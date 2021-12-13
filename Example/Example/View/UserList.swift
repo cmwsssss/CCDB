@@ -33,7 +33,6 @@ class UserListViewModel: ObservableObject {
         self.end = end
         
         self.users = UserModel.queryAll(true, withContainerId: containerId)
-        self.users.first?.removeFromDB(containerId: 1)
         weak var weakSelf = self
         UserModel.addViewNotifier {
             weakSelf?.objectWillChange.send()
