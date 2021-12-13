@@ -19,8 +19,7 @@ CCDB is based on the multi-threaded model of sqlite3 and has a separate memory c
 **In terms of write speed, CCDB is faster than Realm, but in terms of query, CCDB is weaker than Realm**
     
 * CCDB provides memory cache, which will greatly increase the speed when data needs to be queried twice or more.
-    <img width="960" alt="截屏2021-12-13 下午2 43 23" src="https://user-images.githubusercontent.com/16182417/145764726-99bd59e2-35eb-4f40-8602-f1179d3d4091.png">  
-
+    <img width="960" alt="截屏2021-12-13 下午2 57 21" src="https://user-images.githubusercontent.com/16182417/145766371-7b491bc6-c7d1-4012-8236-c341a53736c3.png">
 
 #### SwiftUI adaptation::
 CCDB has optimized the SwiftUI adaptation, and the model properties are adapted to the @Published, meaning that any change in the value of properties will cause the UI to be refreshed
