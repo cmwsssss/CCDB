@@ -3,7 +3,7 @@
 # What's CCDB
 CCDB is a high-performance database framework based on Sqlite3 and Swift, ideal for SwiftUI development
 
-CCDB has an OBJC version , OBJC version is faster , support for dictionary->model mapping , Less code required to use, developers who use OBJC [click here](https://github.com/cmwsssss/CCDB-OBJC)
+CCDB has an OBJC version, support for dictionary->model mapping , Less code required to use, developers who use OBJC [click here](https://github.com/cmwsssss/CCDB-OBJC)
 
 ## Features
 
