@@ -79,6 +79,7 @@ class UserModel: CCModelSavingable {
 //Configure the special properties
 static func modelConfiguration() -> CCModelConfiguration {
     var configuration = CCModelConfiguration(modelInit: UserModel.init)
+    
     //The photoIds is a custom type and needs to be handled manually
     configuration.inOutPropertiesMapper["photoIds"] = true  
     
@@ -88,14 +89,14 @@ static func modelConfiguration() -> CCModelConfiguration {
     //Encoding Method
     configuration.intoDBMapper = intoDBMapper 
     
-    //decoding Method
+    //Decoding Method
     configuration.outDBMapper = outDBMapper
     ...
     return configuration
 }
 ```
 
-* encode custom data as JSON strings
+* Encode custom data as JSON strings
 ```
 static func intoDBMapper(instance: Any)->String {
         
