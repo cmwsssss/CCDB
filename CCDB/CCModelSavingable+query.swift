@@ -292,7 +292,7 @@ extension CCModelSavingable {
             }
             stmt.reset()
         }
-        print("countTime:\(date.timeIntervalSinceNow)")
+//        print("countTime:\(date.timeIntervalSinceNow)")
         return res
     }
     
@@ -340,6 +340,7 @@ extension CCModelSavingable {
     }
     
     static func _query(condition: CCDBCondition) -> [Self] {
+        let date = Date()
         let typeName = String(describing: Self.self)
         var count = 0
         var offset = 0
@@ -397,7 +398,7 @@ extension CCModelSavingable {
                 var datas = [Self]()
                 dbInstance.queue.sync {
                     let date = Date()
-                    print("startCheck")
+//                    print("startCheck")
                     if subCondition.containerId != 0 {
                         if subCondition.whereSql != nil {
                             datas = self.queryForChunkWithJoin(sql: sql, dbInstance: dbInstance, propertyMapper: propertyMapper)
@@ -407,7 +408,7 @@ extension CCModelSavingable {
                     } else {
                         datas = self.queryForChunkWithJoin(sql: sql, dbInstance: dbInstance, propertyMapper: propertyMapper)
                     }
-                    print("chunkDate \(date.timeIntervalSinceNow)")
+//                    print("chunkDate \(date.timeIntervalSinceNow)")
                 }
                 semaphore.wait()
                 guard let subOffset = subCondition.offset else {
@@ -428,7 +429,6 @@ extension CCModelSavingable {
                 subOffset = subOffset + limit
             }
         };
-        
         return res
     }
 }

@@ -28,6 +28,8 @@ class CCModelCacheManager {
     
     var memoryCacheSem = DispatchSemaphore(value: 1)
     
+    var replaceQueue = DispatchQueue(label: "CCDB_replaceQueue")
+    
     private init() {}
     
     public func addObjectToCache(className : String, propertyPrimaryValue: AnyHashable, object : Any) {

@@ -1,0 +1,30 @@
+PODS:
+  - CCDB (1.0.2)
+  - Realm (10.20.0):
+    - Realm/Headers (= 10.20.0)
+  - Realm/Headers (10.20.0)
+  - RealmSwift (10.20.0):
+    - Realm (= 10.20.0)
+
+DEPENDENCIES:
+  - CCDB (from `/Users/cmw/projects/CCDB/CCDB/CCDB`)
+  - Realm
+  - RealmSwift
+
+SPEC REPOS:
+  trunk:
+    - Realm
+    - RealmSwift
+
+EXTERNAL SOURCES:
+  CCDB:
+    :path: "/Users/cmw/projects/CCDB/CCDB/CCDB"
+
+SPEC CHECKSUMS:
+  CCDB: aa35c72f67ff207a6f5b84e7ff8e190eb759f478
+  Realm: ae32bdc1da7d19c7617e0400201a77acd4a211b9
+  RealmSwift: c95eec6a712924870b2e36c4c081d63ec07e5414
+
+PODFILE CHECKSUM: bd33771ca74418c6b01b1e9e77eb2c6d84c7ceae
+
+COCOAPODS: 1.11.2

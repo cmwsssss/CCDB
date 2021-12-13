@@ -322,8 +322,10 @@ public extension CCModelSavingable {
         guard let res = performAction(action: .CCModelActionQuery(_query, condition: condition)) as? [Self] else {
             return [Self]()
         }
-        for obj in res {
-            obj.replaceIntoCache()
+        CCModelCacheManager.shared.replaceQueue.async {
+            for obj in res {
+                obj.replaceIntoCache()
+            }
         }
         return res
     }
@@ -337,9 +339,10 @@ public extension CCModelSavingable {
         guard let res = performAction(action: .CCModelActionQuery(_query, condition: condition)) as? [Self] else {
             return [Self]()
         }
-        
-        for obj in res {
-            obj.replaceIntoCache(containerId: containerId, top: !isAsc)
+        CCModelCacheManager.shared.replaceQueue.async {
+            for obj in res {
+                obj.replaceIntoCache(containerId: containerId, top: !isAsc)
+            }
         }
         return res
     }
