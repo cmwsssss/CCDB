@@ -15,7 +15,7 @@ class CCModelContainerCacheWrapper {
 
 class CCModelCacheWrapper {
     
-    var cache : [(Any, AnyHashable)] = Array()
+    var cache : [Any] = Array()
     var rawData: [AnyHashable: Any] = Dictionary()
     var containerCache: [Int : CCModelContainerCacheWrapper] = Dictionary()
 }
@@ -38,7 +38,7 @@ class CCModelCacheManager {
         if self.memoryCache[className] == nil {
             self.memoryCache[className] = cache
         }
-        cache.cache.append((object, propertyPrimaryValue))
+        cache.cache.append(object)
         cache.rawData[propertyPrimaryValue] = object
         self.memoryCacheSem.signal()
     }
@@ -63,15 +63,26 @@ class CCModelCacheManager {
         self.memoryCacheSem.signal()
     }
         
-    public func removeObjectFromCache(className: String, propertyPrimaryValue: AnyHashable) {
+    public func removeObjectFromCache(className: String, object: Any) {
         self.memoryCacheSem.wait()
         guard let cache = self.memoryCache[className] else {
             self.memoryCacheSem.signal()
             return
         }
-        cache.cache.removeAll(where: { (object, value) in
-            return value == propertyPrimaryValue
-        })
+        let mirror:Mirror = Mirror(reflecting: self)
+        let value = mirror.children[mirror.children.startIndex].value
+        if let targetValue = value as? AnyHashable {
+            cache.cache.removeAll(where: { cachedObject in
+                let mirror:Mirror = Mirror(reflecting: cachedObject)
+                let value = mirror.children[mirror.children.startIndex].value
+                if let primaryValue = value as? AnyHashable, primaryValue == targetValue {
+                    return true
+                } else {
+                    return false
+                }
+            })
+        }
+        
         self.memoryCacheSem.signal()
     }
     
@@ -99,19 +110,8 @@ class CCModelCacheManager {
             return nil
         }
         let date = Date()
-        var res = [Any]()
-        var exsited = [AnyHashable: Bool]()
         let datas = (isAsc) ? cache.cache : cache.cache.reversed()
-        for data in datas {
-            let value = data.1
-            guard exsited[value] == nil else {
-                continue
-            }
-            exsited[value] = true
-            res.append(data.0)
-        }
-        print("sorted: \(date.timeIntervalSinceNow)" )
-        return res
+        return datas
     }
     
     public func getObjectsFromCache(className: String, containerId: Int, isAsc: Bool) -> [Any]? {

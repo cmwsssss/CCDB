@@ -130,11 +130,7 @@ public extension CCModelCacheable {
     }
     
     func removeFromCache() {
-        let mirror:Mirror = Mirror(reflecting: self)
-        let value = mirror.children[mirror.children.startIndex].value
-        if let primaryValue = value as? AnyHashable {
-            CCModelCacheManager.shared.removeObjectFromCache(className: String(describing: Self.self), propertyPrimaryValue: primaryValue)
-        }
+        CCModelCacheManager.shared.removeObjectFromCache(className: String(describing: Self.self), object: self)
     }
     
     func removeFromCache(containerId: Int) {
