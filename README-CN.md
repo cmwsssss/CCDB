@@ -1,6 +1,6 @@
 # CCDB是什么
 CCDB是基于Sqlite3和Swift编写的高性能数据库框架，非常适合用于SwiftUI的的开发
-CCDB拥有一个OBJC版本，OBJC版本速度更快，支持字典->模型映射，使用时需要的代码更少，使用OC的开发者[点此查看](https://github.com/cmwsssss/CCDB-OBJC)
+CCDB拥有一个OBJC版本，支持字典->模型映射，使用时需要的代码更少，使用OC的开发者[点此查看](https://github.com/cmwsssss/CCDB-OBJC)
 
 ## 基本特性介绍
 
