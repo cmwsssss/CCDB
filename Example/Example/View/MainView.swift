@@ -26,15 +26,15 @@ class MainViewModel: ObservableObject {
             self.shouldGoAllUserList.toggle()
         }))
         
-        self.datas.append(MainViewCellModel(name: "10000次批量写入测试", clickHandler: {
+        self.datas.append(MainViewCellModel(name: "Insert 10000 data", clickHandler: {
             self.writeTest()
         }))
         
-        self.datas.append(MainViewCellModel(name: "批量读取测试", clickHandler: {
+        self.datas.append(MainViewCellModel(name: "Load all data", clickHandler: {
             self.loadTest()
         }))
         
-        self.datas.append(MainViewCellModel(name: "10000次分开读取测试", clickHandler: {
+        self.datas.append(MainViewCellModel(name: "Get 10000 data", clickHandler: {
             self.loadSingleData()
         }))
     }
