@@ -3,7 +3,7 @@
 # What's CCDB
 CCDB is a high-performance database framework based on Sqlite3 and Swift, ideal for SwiftUI development
 
-CCDB has an OBJC version , OBJC version is faster , support for dictionary->model mapping , Less code required to use, developers who use OBJC [click here](https://github.com/cmwsssss/CCDB-OBJC)
+CCDB has an OBJC version, support for dictionary->model mapping , Less code required to use, developers who use OBJC [click here](https://github.com/cmwsssss/CCDB-OBJC)
 
 ## Features
 
@@ -16,13 +16,12 @@ CCDB is based on the multi-threaded model of sqlite3 and has a separate memory c
 * Performance comparison with Realm (based on the same data model):
     <img width="960" alt="截屏2021-12-13 下午2 41 51" src="https://user-images.githubusercontent.com/16182417/145764680-a771955d-7cd2-4db3-9df9-0e912553572b.png">
 
-**In terms of write speed, CCDB is faster than Realm, but in terms of query, CCDB is weaker than Realm**
+**In terms of write speed, CCDB is faster than Realm, but in terms of query, CCDB is slower than Realm**
     
 * CCDB provides memory cache, which will greatly increase the speed when data needs to be queried twice or more.
-    <img width="960" alt="截屏2021-12-13 下午2 43 23" src="https://user-images.githubusercontent.com/16182417/145764726-99bd59e2-35eb-4f40-8602-f1179d3d4091.png">  
+    <img width="960" alt="截屏2021-12-13 下午2 57 21" src="https://user-images.githubusercontent.com/16182417/145766371-7b491bc6-c7d1-4012-8236-c341a53736c3.png">
 
-
-#### SwiftUI adaptation::
+#### SwiftUI adaptation:
 CCDB has optimized the SwiftUI adaptation, and the model properties are adapted to the @Published, meaning that any change in the value of properties will cause the UI to be refreshed
 
 #### Container:
@@ -80,6 +79,7 @@ class UserModel: CCModelSavingable {
 //Configure the special properties
 static func modelConfiguration() -> CCModelConfiguration {
     var configuration = CCModelConfiguration(modelInit: UserModel.init)
+    
     //The photoIds is a custom type and needs to be handled manually
     configuration.inOutPropertiesMapper["photoIds"] = true  
     
@@ -89,14 +89,14 @@ static func modelConfiguration() -> CCModelConfiguration {
     //Encoding Method
     configuration.intoDBMapper = intoDBMapper 
     
-    //decoding Method
+    //Decoding Method
     configuration.outDBMapper = outDBMapper
     ...
     return configuration
 }
 ```
 
-* encode custom data as JSON strings
+* Encode custom data as JSON string
 ```
 static func intoDBMapper(instance: Any)->String {
         
@@ -119,7 +119,7 @@ static func intoDBMapper(instance: Any)->String {
     }
 }
 ```
-* Decode and populate properties with JSON strings from the database
+* Decode and populate properties with JSON string from the database
 
 ```
 static func outDBMapper(instance: Any, rawData: String) {

@@ -1,6 +1,6 @@
 # CCDB是什么
 CCDB是基于Sqlite3和Swift编写的高性能数据库框架，非常适合用于SwiftUI的的开发
-CCDB拥有一个OBJC版本，OBJC版本速度更快，支持字典->模型映射，使用时需要的代码更少，使用OC的开发者[点此查看](https://github.com/cmwsssss/CCDB-OBJC)
+CCDB拥有一个OBJC版本，支持字典->模型映射，使用时需要的代码更少，使用OC的开发者[点此查看](https://github.com/cmwsssss/CCDB-OBJC)
 
 ## 基本特性介绍
 
@@ -16,8 +16,7 @@ CCDB是基于sqlite3的多线程模型进行工作的，并且其拥有独立的
 **在写入速度上，CCDB是超过Realm的，但是在查询上，CCDB弱于Realm**
     
 * CCDB提供了内存缓存，当数据需要二次获多次查询时，速度将会大幅提升
-<img width="960" alt="截屏2021-12-13 下午2 31 36" src="https://user-images.githubusercontent.com/16182417/145763503-12653b41-9436-4de8-b982-2fc345dbf4a3.png">
-
+<img width="960" alt="截屏2021-12-13 下午2 59 53" src="https://user-images.githubusercontent.com/16182417/145766614-92919304-681a-4a17-acc9-a6baf7616bbc.png">
 
 #### 适配SwiftUI:
 CCDB对SwiftUI的适配进行了单独的优化，模型属性适配了@Published机制，意味着任何数据属性值的改变，都会让UI进行刷新
