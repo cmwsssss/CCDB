@@ -16,7 +16,7 @@ CCDB is based on the multi-threaded model of sqlite3 and has a separate memory c
 * Performance comparison with Realm (based on the same data model):
     <img width="960" alt="截屏2021-12-13 下午2 41 51" src="https://user-images.githubusercontent.com/16182417/145764680-a771955d-7cd2-4db3-9df9-0e912553572b.png">
 
-**In terms of write speed, CCDB is faster than Realm, but in terms of query, CCDB is weaker than Realm**
+**In terms of write speed, CCDB is faster than Realm, but in terms of query, CCDB is slower than Realm**
     
 * CCDB provides memory cache, which will greatly increase the speed when data needs to be queried twice or more.
     <img width="960" alt="截屏2021-12-13 下午2 57 21" src="https://user-images.githubusercontent.com/16182417/145766371-7b491bc6-c7d1-4012-8236-c341a53736c3.png">
