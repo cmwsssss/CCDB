@@ -96,7 +96,7 @@ static func modelConfiguration() -> CCModelConfiguration {
 }
 ```
 
-* Encode custom data as JSON strings
+* Encode custom data as JSON string
 ```
 static func intoDBMapper(instance: Any)->String {
         
@@ -119,7 +119,7 @@ static func intoDBMapper(instance: Any)->String {
     }
 }
 ```
-* Decode and populate properties with JSON strings from the database
+* Decode and populate properties with JSON string from the database
 
 ```
 static func outDBMapper(instance: Any, rawData: String) {
