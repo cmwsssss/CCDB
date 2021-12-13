@@ -10,6 +10,15 @@ CCDB的使用非常简单，只需要一句代码就可以进行增删改查，�
 #### 高效性:
 CCDB是基于sqlite3的多线程模型进行工作的，并且其拥有独立的内存缓存机制，使其性能在绝大多数时候表现比原生sqlite3更好
 
+* 和Realm的性能对比(基于完全相同的数据模型):
+<img width="872" alt="截屏2021-12-13 上午11 34 04" src="https://user-images.githubusercontent.com/16182417/145748384-0e26111c-4caf-4c21-b079-1d22401437e3.png">
+    
+**在写入速度上，CCDB是超过Realm的，但是在查询上，CCDB弱于Realm**
+    
+* CCDB提供了内存缓存，当数据需要二次获多次查询时，速度将会大幅提升
+<img width="960" alt="截屏2021-12-13 下午2 31 36" src="https://user-images.githubusercontent.com/16182417/145763503-12653b41-9436-4de8-b982-2fc345dbf4a3.png">
+
+
 #### 适配SwiftUI:
 CCDB对SwiftUI的适配进行了单独的优化，模型属性适配了@Published机制，意味着任何数据属性值的改变，都会让UI进行刷新
 

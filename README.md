@@ -13,6 +13,15 @@ CCDB is very easy to use, Just one line of code to insert, query, delete and upd
 #### Efficient:
 CCDB is based on the multi-threaded model of sqlite3 and has a separate memory caching mechanism, making its performance better than direct use sqlite3 in most cases.
 
+* Performance comparison with Realm (based on the same data model):
+    <img width="960" alt="截屏2021-12-13 下午2 41 51" src="https://user-images.githubusercontent.com/16182417/145764680-a771955d-7cd2-4db3-9df9-0e912553572b.png">
+
+**In terms of write speed, CCDB is faster than Realm, but in terms of query, CCDB is weaker than Realm**
+    
+* CCDB provides memory cache, which will greatly increase the speed when data needs to be queried twice or more.
+    <img width="960" alt="截屏2021-12-13 下午2 43 23" src="https://user-images.githubusercontent.com/16182417/145764726-99bd59e2-35eb-4f40-8602-f1179d3d4091.png">  
+
+
 #### SwiftUI adaptation::
 CCDB has optimized the SwiftUI adaptation, and the model properties are adapted to the @Published, meaning that any change in the value of properties will cause the UI to be refreshed
 
