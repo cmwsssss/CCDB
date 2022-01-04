@@ -3,8 +3,7 @@ use_frameworks!
 platform :ios, '13.0'
 
 target 'SpeedTest' do
-#    pod 'CCDB'
-pod 'CCDB', :path=>'/Users/cmw/projects/ccmodelexample/ccmodelexample'
+    pod 'CCDB'
     pod 'RealmSwift'
     pod 'Realm'
 end
