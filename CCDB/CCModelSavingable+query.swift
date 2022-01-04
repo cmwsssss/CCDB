@@ -49,7 +49,11 @@ extension CCModelSavingable {
     
     private static func getPrimaryValueFromCustomPrimaryProperty(stmt: CCDBStatement, index: Int32, type: Any.Type, dbInstance: CCDBInstance) -> Any? {
         
-        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(type) else {
+        guard let customType = type as? CCModelSavingable.Type else {
+            return nil
+        }
+        
+        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(customType.fastModelIndex(), type: customType) else {
             return nil
         }
         
@@ -77,14 +81,14 @@ extension CCModelSavingable {
     }
     
     private static func setupFromStmt(stmt: CCDBStatement, object :inout Any, properties: [Property.Description], dbInstance: CCDBInstance) -> [String :(propertyDetail: PropertyInfo, primaryValue:AnyHashable)]? {
-        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
+        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self) else {
             return nil
         }
         var instance = object as? CCModelSavingable
         guard let rawPointer = instance?.headPointer() else {
             return nil
         }
-        
+                
         var needSetupCustomObjects = [String :(propertyDetail: PropertyInfo, primaryValue:AnyHashable)]()
         
         var index :Int32 = 0
@@ -101,6 +105,7 @@ extension CCModelSavingable {
             }
             
             let propertyDetail = PropertyInfo(key: property.key, type: type, address: propAddr, bridged: false)
+            var primaryValue: AnyHashable?
             if let columnType = propertyMapper.columnType[property.key] {
                 let getValue = stmt.getValue(columnType)
                 switch columnType {
@@ -108,21 +113,26 @@ extension CCModelSavingable {
                     switch getValue {
                     case let.CCDBStatementReturnTypeBool(getBool):
                         let value = getBool(index)
+                        primaryValue = value
                         extensions(of: type).write(value, to: propertyDetail.address)
                     case let.CCDBStatementReturnTypeInt(getInt32):
                         if let value = decodeInt32Type(value:getInt32(index), targetType:Int.self) {
+                            primaryValue = value as? AnyHashable
                             extensions(of: type).write(value, to: propertyDetail.address)
                         }
                     case let .CCDBStatementReturnTypeLong(getInt64):
                         if let value = decodeInt64Type(value:getInt64(index), targetType:Int64.self) {
+                            primaryValue = value as? AnyHashable
                             extensions(of: type).write(value, to: propertyDetail.address)
                         }
                     case let .CCDBStatementReturnTypeDouble(getDouble):
                         if let value = decodeDoubleType(value:getDouble(index), targetType:Double.self) {
+                            primaryValue = value as? AnyHashable
                             extensions(of: type).write(value, to: propertyDetail.address)
                         }
                     case let .CCDBStatementReturnTypeString(getString):
                         let value = getString(index)
+                        primaryValue = value
                         extensions(of: type).write(value, to: propertyDetail.address)
                     }
                 case .CCDBColumnTypeCustom:
@@ -135,6 +145,10 @@ extension CCModelSavingable {
                         needSetupCustomObjects[propertyDetail.key] = (propertyDetail, primaryValue)
                     }
                 }
+            }
+            if index == 0, let value = primaryValue, let cacheObject = Self.initWithPrimaryPropertyFromCache(value: value) {
+                object = cacheObject
+                return needSetupCustomObjects
             }
             
             index = index + 1
@@ -159,23 +173,23 @@ extension CCModelSavingable {
     static func setupCustomObjects(objects: [String :(propertyDetail: PropertyInfo, primaryValue:AnyHashable)], dbInstance: CCDBInstance) {
         for (_, value) in objects {
             
-            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(value.propertyDetail.type) else {
+            guard let customType = value.propertyDetail.type as? CCModelSavingable.Type else {
+                return
+            }
+            
+            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(customType.fastModelIndex(), type: customType) else {
                 return
             }
             
             guard let modelInit = propertyMapper.modelInit else {
                 return
             }
-            
-            var object = modelInit()
-            guard let objectType = type(of: object) as? CCModelSavingable.Type else {
+            guard let object = (customType._initWithPrimaryPropertyValue(value.primaryValue, needWait: false) ?? modelInit()) as? CCModelSavingable else {
                 return
             }
-            object = objectType.initWithPrimaryPropertyValue(value.primaryValue) ?? modelInit()
-            propertyMapper.needNotifierObject.append(object as! CCModelSavingable)
-            
-//            self.updateWithDBData(object: &object, primaryValue: value.primaryValue, propertyMapper: propertyMapper, type:value.propertyDetail.type, dbInstance: dbInstance)
-            
+            CCModelMapperManager.shared.notifierSem.wait()
+            propertyMapper.needNotifierObject.append(object)
+            CCModelMapperManager.shared.notifierSem.signal()
             extensions(of: value.propertyDetail.type).write(object, to: value.propertyDetail.address)
         }
     }
@@ -223,17 +237,20 @@ extension CCModelSavingable {
     }
     
     static func _initWithPrimaryPropertyValue(_ value: AnyHashable, dbInstance: CCDBInstance) -> Self? {
-        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
+        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self) else {
             return nil
         }
         guard let modelInit = propertyMapper.modelInit else {
             return nil
         }
-        var object = modelInit()
+        CCModelMapperManager.shared.notifierSem.wait()
+        var object = Self.initWithPrimaryPropertyFromCache(value: value) ?? modelInit()
         guard let needNotifier = object as? CCModelSavingable else {
+            CCModelMapperManager.shared.notifierSem.signal()
             return nil
         }
         propertyMapper.needNotifierObject.append(needNotifier)
+        CCModelMapperManager.shared.notifierSem.signal()
         self.updateWithDBData(object: &object, primaryValue: value, propertyMapper: propertyMapper, type: Self.self, dbInstance: dbInstance)
         guard let res = object as? Self else {
             return nil
@@ -261,12 +278,12 @@ extension CCModelSavingable {
         let typeName = String(describing: Self.self)
         var sql = "SELECT COUNT(*) from "
         if condition.containerId != 0 {
-            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
+            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self) else {
                 return 0
             }
             
             if let whereSql = condition.whereSql {
-                sql = sql + "\(typeName) , \(typeName)_index as i where \(typeName).\(propertyMapper.properties[0].key) = i.primarykey and i.hash_id = \(condition.containerId)"
+                sql = sql + "\(typeName) , \(typeName)_index as i where \(typeName).\(propertyMapper.properties[0].key) = i.primary_key and i.hash_id = \(condition.containerId)"
                 sql = sql + " AND \(whereSql)"
             } else {
                 sql = sql + " \(typeName)_index as i where i.hash_id = \(condition.containerId)"
@@ -292,7 +309,9 @@ extension CCModelSavingable {
             }
             stmt.reset()
         }
-//        print("countTime:\(date.timeIntervalSinceNow)")
+        #if DEBUG
+        print("countTime:\(date.timeIntervalSinceNow)")
+        #endif
         return res
     }
     
@@ -340,14 +359,13 @@ extension CCModelSavingable {
     }
     
     static func _query(condition: CCDBCondition) -> [Self] {
-        let date = Date()
         let typeName = String(describing: Self.self)
         var count = 0
         var offset = 0
         if let conditionLimit = condition.limit {
             count = conditionLimit
         } else {
-            count = self.count(condition)
+            count = self._count(condition, needWait: false)
         }
         if let conditionOffset = condition.offset {
             offset = conditionOffset
@@ -359,7 +377,7 @@ extension CCModelSavingable {
         limit = (limit == 0) ? 1 : limit
         condition.ccLimit(limit: limit)
         let semaphore = DispatchSemaphore.init(value: 1)
-        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
+        guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self) else {
             return [Self]()
         }
         
@@ -380,10 +398,10 @@ extension CCModelSavingable {
                 
                 if subCondition.containerId != 0 {
                     if subCondition.whereSql != nil {
-                        sql = sql + " where \(typeName).\(propertyMapper.properties[0].key) = i.primarykey and i.hash_id = \(subCondition.containerId)"
+                        sql = sql + " where \(typeName).\(propertyMapper.properties[0].key) = i.primary_key and i.hash_id = \(subCondition.containerId)"
                         sql = sql + subCondition.sql
                     } else {
-                        sql = "SELECT primaryKey from \(typeName)_index as i WHERE i.hash_id = \(subCondition.containerId) \(subCondition.sql)"
+                        sql = "SELECT primary_key from \(typeName)_index as i WHERE i.hash_id = \(subCondition.containerId) \(subCondition.sql)"
                     }
                     
                 } else {
@@ -398,7 +416,6 @@ extension CCModelSavingable {
                 var datas = [Self]()
                 dbInstance.queue.sync {
                     let date = Date()
-//                    print("startCheck")
                     if subCondition.containerId != 0 {
                         if subCondition.whereSql != nil {
                             datas = self.queryForChunkWithJoin(sql: sql, dbInstance: dbInstance, propertyMapper: propertyMapper)
@@ -408,7 +425,9 @@ extension CCModelSavingable {
                     } else {
                         datas = self.queryForChunkWithJoin(sql: sql, dbInstance: dbInstance, propertyMapper: propertyMapper)
                     }
-//                    print("chunkDate \(date.timeIntervalSinceNow)")
+                    #if DEBUG
+                    print("chunkDate \(date.timeIntervalSinceNow)")
+                    #endif
                 }
                 semaphore.wait()
                 guard let subOffset = subCondition.offset else {
@@ -429,6 +448,7 @@ extension CCModelSavingable {
                 subOffset = subOffset + limit
             }
         };
+        
         return res
     }
 }

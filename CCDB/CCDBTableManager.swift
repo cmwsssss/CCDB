@@ -21,12 +21,13 @@ class CCDBTableManager {
 }
 
 public protocol CCDBTableEditable {
-    func nextEditTableAction()
+    func nextEditTableAction(typeName: String)
 }
 
 public extension CCDBTableEditable {
     
     static private var createTableSql : String? {
+        
         let typeName = String(describing: Self.self)
         guard let mapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
             return nil
@@ -78,8 +79,17 @@ public extension CCDBTableEditable {
             return nil
         }
         let primaryProperty = mapper.properties[0]
-        let sql = "CREATE TABLE IF NOT EXISTS \(typeName)_index (id TEXT, hash_id INTEGER, primarykey \(primaryProperty.key), update_time REAL, PRIMARY KEY(id))";
-        return sql
+        let columnType = mapper.columnType[primaryProperty.key]
+        switch columnType {
+        case .CCDBColumnTypeInt, .CCDBColumnTypeLong, .CCDBColumnTypeBool:
+            return "CREATE TABLE IF NOT EXISTS \(typeName)_index (id TEXT, hash_id INTEGER, primary_key INTEGER, update_time REAL, PRIMARY KEY(id))";
+        case .CCDBColumnTypeDouble:
+            return "CREATE TABLE IF NOT EXISTS \(typeName)_index (id TEXT, hash_id INTEGER, primary_key REAL, update_time REAL, PRIMARY KEY(id))";
+        case .CCDBColumnTypeString:
+            return "CREATE TABLE IF NOT EXISTS \(typeName)_index (id TEXT, hash_id INTEGER, primary_key TEXT, update_time REAL, PRIMARY KEY(id))";
+        default:
+            return nil
+        }
     }
     
     static private var dropTableSql: String? {
@@ -158,6 +168,7 @@ public extension CCDBTableEditable {
     }
     
     static private func updateTable() {
+        CCDBUpdateManager.shared.waitInit()
         let instance = CCDBInstancePool.shared.getATransaction()
         instance.queue.sync {
             if let sql = self.renameTableSql {
@@ -179,9 +190,8 @@ public extension CCDBTableEditable {
         }
     }
     
-    static func nextEditTableAction() {
+    static func nextEditTableAction(typeName: String) {
         CCDBTableManager.shared.semphore.wait()
-        let typeName = String(describing: Self.self)
         CCModelMapperManager.shared.initializeMapperWithType(Self.self,typeName: typeName)
         let nextAction = getNextTableAction(typeName: typeName)
         switch nextAction {
@@ -196,8 +206,8 @@ public extension CCDBTableEditable {
         CCDBTableManager.shared.semphore.signal()
     }
     
-    func nextEditTableAction() {
-        Self.nextEditTableAction()
+    func nextEditTableAction(typeName: String) {
+        Self.nextEditTableAction(typeName: typeName)
     }
     
     static private func getNextTableAction(typeName: String) -> CCDBTableAction {
@@ -212,7 +222,7 @@ public extension CCDBTableEditable {
         return CCDBTableAction.CCDBTableActionNone
     }
     
-    static private func checkTableInitialized(typeName: String) -> Bool {
+    static public func checkTableInitialized(typeName: String) -> Bool {
         guard let initialized = CCDBTableManager.shared.dicTableInitialized[typeName] else {
             return false
         }

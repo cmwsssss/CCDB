@@ -2,15 +2,15 @@ PODS:
   - CCDB (1.0.0)
 
 DEPENDENCIES:
-  - CCDB
+  - CCDB (from `/Users/cmw/projects/ccmodelexample/ccmodelexample`)
 
-SPEC REPOS:
-  trunk:
-    - CCDB
+EXTERNAL SOURCES:
+  CCDB:
+    :path: "/Users/cmw/projects/ccmodelexample/ccmodelexample"
 
 SPEC CHECKSUMS:
-  CCDB: b358638aba558556ca47fa687a28e972e1928f64
+  CCDB: 33ca3309aef9103704d0e414be2cedfdb4a63667
 
-PODFILE CHECKSUM: 244f06c76d416f7a31876e907e61b6e850e156cc
+PODFILE CHECKSUM: ca4d3c006762a5a9a614e28d68583d9aa453dbd4
 
 COCOAPODS: 1.11.2

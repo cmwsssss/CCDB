@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-enum CCDBColumnType {
+public enum CCDBColumnType {
     case CCDBColumnTypeInt
     case CCDBColumnTypeBool
     case CCDBColumnTypeLong

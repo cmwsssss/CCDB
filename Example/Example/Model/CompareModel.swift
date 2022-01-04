@@ -17,6 +17,10 @@ class CompareModel: CCModelSavingable {
     var param6 = "param6"
     var param7 = "param7"
     
+    static func fastModelIndex() -> String {
+        return "CompareModel"
+    }
+    
     static func modelConfiguration() -> CCModelConfiguration {
         return CCModelConfiguration(modelInit: CompareModel.init)
     }

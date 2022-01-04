@@ -73,6 +73,8 @@ public class CCDBConnection {
         for _ in 0...CCDBInstancePool.DB_INSTANCE_POOL_SIZE {
             CCDBInstancePool.shared.addDBInstance(openDatabase(filePath))
         }
+        ccdb_syncAllLocalCache()
+        _ = CCDBUpdateManager.shared
     }
     
     static func openDatabase(_ filePath: String) -> OpaquePointer? {

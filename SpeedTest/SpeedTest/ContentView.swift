@@ -28,7 +28,7 @@ class ContentViewModel: ObservableObject {
             CellDataSource(title: "Insert 10000 data with Realm", handler: self.insert10000WithRealm),
             CellDataSource(title: "Insert 100000 data with CCDB", handler: self.insert100000WithCCDB),
             CellDataSource(title: "Insert 100000 data with Realm", handler: self.insert100000WithRealm),
-            CellDataSource(title: "Quert all data with CCDB", handler: self.queryAllDatasWithCCDB),
+            CellDataSource(title: "Query all data with CCDB", handler: self.queryAllDatasWithCCDB),
             CellDataSource(title: "Query all data with Realm", handler: self.queryAllDatasWithRealm),
             CellDataSource(title: "Get 10000 data with CCDB", handler: self.get10000DataWithCCDB),
             CellDataSource(title: "Get 10000 data with Realm", handler: self.get10000DataWithRealm)
@@ -37,11 +37,12 @@ class ContentViewModel: ObservableObject {
     
     func insert10000WithCCDB() {
         let date = Date()
-        for i in 0...10000 {
+        for i in 0..<10000 {
             let model = CCDBModel()
             model.compareId = i
             model.replaceIntoDB()
         }
+        
         self.alertTitle = "\(-date.timeIntervalSinceNow)"
         self.showAlert.toggle()
     }
@@ -51,7 +52,7 @@ class ContentViewModel: ObservableObject {
         let realm = RealmHelper.getDB()
         do {
             try realm.write {
-                for i in 0...10000 {
+                for i in 0..<10000 {
                     let model = RealmModel.init()
                     model.compareId = i
                     realm.add(model as! Object)
@@ -67,7 +68,7 @@ class ContentViewModel: ObservableObject {
     
     func insert100000WithCCDB() {
         let date = Date()
-        for i in 0...100000 {
+        for i in 0..<100000 {
             let model = CCDBModel()
             model.compareId = i
             model.replaceIntoDB()
@@ -81,7 +82,7 @@ class ContentViewModel: ObservableObject {
         let realm = RealmHelper.getDB()
         do {
             try realm.write {
-                for i in 0...100000 {
+                for i in 0..<100000 {
                     let model = RealmModel.init()
                     model.compareId = i
                     realm.add(model as! Object)
@@ -106,8 +107,7 @@ class ContentViewModel: ObservableObject {
         let realm = RealmHelper.getDB()
         let results = realm.objects(RealmModel.self)
         //Make a real query
-        for _ in results {
-            
+        for res in results {
         }
         self.alertTitle = "\(-date.timeIntervalSinceNow)"
         self.showAlert.toggle()

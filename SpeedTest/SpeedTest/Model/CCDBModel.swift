@@ -18,7 +18,11 @@ class CCDBModel: CCModelSavingable {
     var param7 = "param7"
     
     static func modelConfiguration() -> CCModelConfiguration {
-        let modelConfg = CCModelConfiguration(modelInit: CCDBModel.init)
+        var modelConfg = CCModelConfiguration(modelInit: CCDBModel.init)
         return modelConfg
+    }
+    
+    static func fastModelIndex() -> String {
+        return "CCDBModel"
     }
 }

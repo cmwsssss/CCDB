@@ -18,4 +18,5 @@ public struct CCModelConfiguration {
     public var outDBMapper : ((Any, String)->())?
     public var inOutPropertiesMapper = [String: Bool]()
     public var publishedTypeMapper = [String: Any.Type]()
+    public var cachePolicy = CCModelCachePolicy.fastQueryAndUpdate
 }

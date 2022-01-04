@@ -3,5 +3,6 @@ use_frameworks!
 platform :ios, '13.0'
 
 target 'Example' do
-    pod 'CCDB'
+#    pod 'CCDB'
+pod 'CCDB', :path=>'/Users/cmw/projects/ccmodelexample/ccmodelexample'
 end

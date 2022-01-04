@@ -21,7 +21,7 @@
 //  Created by zhouzhuo on 20/08/2017.
 //
 
-struct PropertyInfo {
+public struct PropertyInfo {
     let key: String
     let type: Any.Type
     let address: UnsafeMutableRawPointer

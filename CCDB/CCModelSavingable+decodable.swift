@@ -69,7 +69,7 @@ public extension CCModelSavingable {
     
     private static func setupFromSelfModel(model: Any, primaryValue: AnyHashable, properties: [Property.Description]) -> Self? {
         if var instanceIn = Self.initWithPrimaryPropertyValue(primaryValue) {
-            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
+            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self) else {
                 return nil
             }
             let rawPointerIn = instanceIn.headPointer()
@@ -152,7 +152,7 @@ public extension CCModelSavingable {
                         }
 
                         if let primaryValue = mirror.children[mirror.children.startIndex].value as? AnyHashable,
-                            let customPropertyMapper = CCModelMapperManager.shared.getMapperWithType(type) {
+                           let customPropertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(customType.fastModelIndex(), type: type) {
                             
                             let finalObject = customType.setupFromSelfModel(model: finalValue, primaryValue: primaryValue, properties:customPropertyMapper.properties)
                             
@@ -190,7 +190,7 @@ public extension CCModelSavingable {
     static func updateWithJSON<T:Decodable>(mapper: T.Type, jsonData: Any) -> T {
         var res = [Any]()
         do {
-            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
+            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self) else {
                 return res as! T
             }
             let rawData = try JSONSerialization.data(withJSONObject: jsonData, options: .fragmentsAllowed)

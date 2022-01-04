@@ -12,6 +12,7 @@ public class CCDBInstance {
     var queue : DispatchQueue
     var instance : OpaquePointer?
     var dicStatments : [String : CCDBStatement] = Dictionary()
+    var index = 0
     
     init(queue: DispatchQueue, instance: OpaquePointer?) {
         self.queue = queue
@@ -22,14 +23,13 @@ public class CCDBInstance {
 class CCDBInstancePool {
     static let shared = CCDBInstancePool()
     
-    static let DB_INSTANCE_POOL_SIZE = 4
+    static var DB_INSTANCE_POOL_SIZE = Int(ccdb_countOfCores())
     
     var index = 0
     
     var instances : [CCDBInstance] = []
     
     init() {
-        
     }
     
     func getATransaction()->CCDBInstance {
@@ -42,6 +42,7 @@ class CCDBInstancePool {
         let queue = dispatch_queue_serial_t.init(label: "CCDB_queue_\(self.index)")
         let dbInstance = CCDBInstance(
             queue: queue, instance: sqlite3Instance)
+        dbInstance.index = self.index
         self.instances.append(dbInstance)
         self.index = self.index + 1
     }

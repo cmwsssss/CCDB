@@ -26,26 +26,27 @@ class CCModelCacheManager {
     
     var memoryCache : [String : CCModelCacheWrapper] = Dictionary()
     
-    var memoryCacheSem = DispatchSemaphore(value: 1)
     
     var replaceQueue = DispatchQueue(label: "CCDB_replaceQueue")
     
     private init() {}
     
     public func addObjectToCache(className : String, propertyPrimaryValue: AnyHashable, object : Any) {
-        self.memoryCacheSem.wait()
+        ccdb_writeLock()
         let cache = self.memoryCache[className] ?? CCModelCacheWrapper()
         if self.memoryCache[className] == nil {
             self.memoryCache[className] = cache
         }
-        cache.cache.append(object)
-        cache.rawData[propertyPrimaryValue] = object
-        self.memoryCacheSem.signal()
+        if cache.rawData[propertyPrimaryValue] == nil {
+            cache.cache.append(object)
+            cache.rawData[propertyPrimaryValue] = object
+        }
+        ccdb_unlock()
     }
     
     
     public func addObjectToContainer(className: String, propertyPrimaryValue: AnyHashable, containerId: Int, top: Bool) {
-        self.memoryCacheSem.wait()
+        ccdb_writeLock()
         let cache = self.memoryCache[className] ?? CCModelCacheWrapper()
         if self.memoryCache[className] == nil {
             self.memoryCache[className] = cache
@@ -60,13 +61,13 @@ class CCModelCacheManager {
         } else {
             containerCache.tailCache.append(propertyPrimaryValue)
         }
-        self.memoryCacheSem.signal()
+        ccdb_unlock()
     }
         
     public func removeObjectFromCache(className: String, object: Any) {
-        self.memoryCacheSem.wait()
+        ccdb_writeLock()
         guard let cache = self.memoryCache[className] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return
         }
         let mirror:Mirror = Mirror(reflecting: self)
@@ -82,18 +83,17 @@ class CCModelCacheManager {
                 }
             })
         }
-        
-        self.memoryCacheSem.signal()
+        ccdb_unlock()
     }
     
     public func removeObjectFromContainerCache(className: String, propertyPrimaryValue: AnyHashable, containerId: Int) {
-        self.memoryCacheSem.wait()
+        ccdb_writeLock()
         guard let cache = self.memoryCache[className] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return
         }
         guard let containerCache = cache.containerCache[containerId] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return
         }
         containerCache.headCache.removeAll { value in
@@ -102,26 +102,27 @@ class CCModelCacheManager {
         containerCache.tailCache.removeAll { value in
             value == propertyPrimaryValue
         }
-        self.memoryCacheSem.signal()
+        ccdb_unlock()
     }
     
     public func getObjectsFromCache(className: String, isAsc: Bool) -> [Any]? {
         guard let cache = self.memoryCache[className] else {
             return nil
         }
-        let date = Date()
+        ccdb_readLock()
         let datas = (isAsc) ? cache.cache : cache.cache.reversed()
+        ccdb_unlock()
         return datas
     }
     
     public func getObjectsFromCache(className: String, containerId: Int, isAsc: Bool) -> [Any]? {
-        self.memoryCacheSem.wait()
+        ccdb_readLock()
         guard let cache = self.memoryCache[className] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return nil
         }
         guard let containerCache = cache.containerCache[containerId] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return nil
         }
         let date = Date()
@@ -150,43 +151,42 @@ class CCModelCacheManager {
             }
             res.append(data)
         }
-        print("sorted: \(date.timeIntervalSinceNow)" )
-        self.memoryCacheSem.signal()
+        ccdb_unlock()
         return res
     }
     
     
     public func getObject(className : String, propertyPrimaryValue : AnyHashable) -> Any? {
-        self.memoryCacheSem.wait()
+        ccdb_readLock()
         guard let cache = self.memoryCache[className] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return nil
         }
         let res = cache.rawData[propertyPrimaryValue]
-        self.memoryCacheSem.signal()
+        ccdb_unlock()
         return res
     }
     
     public func removeAllFromCache(className: String) {
-        self.memoryCacheSem.wait()
+        ccdb_writeLock()
         guard let cache = self.memoryCache[className] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return
         }
         cache.cache.removeAll()
         cache.containerCache.removeAll()
-        self.memoryCacheSem.signal()
+        ccdb_unlock()
     }
     
     public func removeAllFromCache(className: String, containerId: Int) {
-        self.memoryCacheSem.wait()
+        ccdb_writeLock()
         guard let cache = self.memoryCache[className] else {
-            self.memoryCacheSem.signal()
+            ccdb_unlock()
             return
         }
         cache.containerCache[containerId]?.sortIndex.removeAll()
         cache.containerCache[containerId]?.headCache.removeAll()
         cache.containerCache[containerId]?.tailCache.removeAll()
-        self.memoryCacheSem.signal()
+        ccdb_unlock()
     }
 }

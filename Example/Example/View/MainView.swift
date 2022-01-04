@@ -25,42 +25,6 @@ class MainViewModel: ObservableObject {
         self.datas.append(MainViewCellModel(name: "All Users", clickHandler: {
             self.shouldGoAllUserList.toggle()
         }))
-        
-        self.datas.append(MainViewCellModel(name: "Insert 10000 data", clickHandler: {
-            self.writeTest()
-        }))
-        
-        self.datas.append(MainViewCellModel(name: "Load all data", clickHandler: {
-            self.loadTest()
-        }))
-        
-        self.datas.append(MainViewCellModel(name: "Get 10000 data", clickHandler: {
-            self.loadSingleData()
-        }))
-    }
-    
-    func loadTest() {
-        let date = Date()
-        CompareModel.queryAll(false)
-        print("finish \(date.timeIntervalSinceNow)")
-    }
-    
-    func writeTest() {
-        let date = Date()
-        for i in 0...10000 {
-            let model = CompareModel.init()
-            model.compareId = i
-            model.replaceIntoDB()
-        }
-        print("finish \(date.timeIntervalSinceNow)")
-    }
-    
-    func loadSingleData() {
-        let date = Date()
-        for i in 0...10000 {
-            CompareModel.initWithPrimaryPropertyValue(i)
-        }
-        print("finish \(date.timeIntervalSinceNow)")
     }
 }
 

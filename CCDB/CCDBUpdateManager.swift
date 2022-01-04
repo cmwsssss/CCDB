@@ -11,12 +11,11 @@ class CCDBUpdateManager : CCDBTransactionable {
     
     static let shared = CCDBUpdateManager()
     
-    var bufferLock = DispatchSemaphore.init(value: 1)
-    var updateLock = DispatchSemaphore.init(value: 1)
-    var modelBuffer = [Any]()
-    var models = [Any]()
+    var datas = [Any]()
+    var inited = false
     var lastCheckTime = Date()
     var _gcdQueue: DispatchQueue?
+    var initSemp = DispatchSemaphore(value: 1)
     var timer: DispatchSourceTimer?
     var gcdQueue: DispatchQueue {
         guard let queue = _gcdQueue else {
@@ -33,46 +32,43 @@ class CCDBUpdateManager : CCDBTransactionable {
             self.replaceIntoDB()
         })
         self.timer?.resume()
+        self._replaceIntoDB()
+    }
+    
+    func waitInit() {
+        self.initSemp.wait()
+        self.initSemp.signal()
+    }
+    
+    func _replaceIntoDB() {
+        let dbInstance = CCDBInstancePool.shared.getATransaction()
+        dbInstance.queue.sync {
+            let date = Date()
+            if !self.inited {
+                self.initSemp.wait()
+            }
+            self.beginTransaction(dbInstance)
+            ccdb_replaceMMAPCacheDataIntoDB(dbInstance.instance, dbInstance.index)
+            if !self.inited {
+                self.initSemp.signal()
+                self.inited = true
+            }
+            self.commitTransaction(dbInstance)
+            #if DEBUG
+            print("Replace into DB time \(date.timeIntervalSinceNow)")
+            #endif
+            self.replaceIntoDB()
+        }
     }
     
     func replaceIntoDB() {
-        if self.lastCheckTime.timeIntervalSinceNow > -1 || self.modelBuffer.count == 0 {
+        if self.lastCheckTime.timeIntervalSinceNow > -1 || (ccdb_cpuUsage() > 30 && self.lastCheckTime.timeIntervalSinceNow < -10) {
             return
         }
         self.lastCheckTime = Date()
         self.gcdQueue.async {
-            self.updateLock.wait()
-            self.bufferLock.wait()
-            self.models.append(contentsOf: self.modelBuffer)
-            self.modelBuffer.removeAll()
-            self.bufferLock.signal()
-            let dbInstance = CCDBInstancePool.shared.getATransaction()
-            dbInstance.queue.async {
-                let date = Date()
-                self.beginTransaction(dbInstance)
-                for model in self.models {
-                    if let updateModel = model as? CCDBUpdateModel {
-                        updateModel.model?._replaceIntoDB(dbInstance: dbInstance, containerId: updateModel.containerId ?? 0, top: updateModel.top)
-                    } else {
-                        guard let waitingModel = model as? CCModelSavingable else {
-                            continue
-                        }
-                        waitingModel._replaceIntoDB(dbInstance: dbInstance)
-                    }
-                }
-                self.commitTransaction(dbInstance)
-                self.models.removeAll()
-                self.updateLock.signal()
-                self.replaceIntoDB()
-            }
+            self._replaceIntoDB()
         }
-    }
-    
-    func addModel(model: Any) {
-        self.bufferLock.wait()
-        self.modelBuffer.append(model)
-        self.bufferLock.signal()
-        self.replaceIntoDB()
     }
     
 }

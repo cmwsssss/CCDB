@@ -46,7 +46,7 @@ public enum CCModelAction {
  
  )
  */
-public protocol CCModelSavingable : CCModelCacheable, CCDBTransactionable, CCDBTableEditable, _Measurable {
+public protocol CCModelSavingable : CCModelCacheable, CCDBTransactionable, CCDBTableEditable {
     
     /**
      Configuration of the model (对模型进行配置)
@@ -217,26 +217,24 @@ public protocol CCModelSavingable : CCModelCacheable, CCDBTransactionable, CCDBT
      ```
      */
     static func addViewNotifier(notifier: @escaping ()->Void)
+    
         
 }
 
 public extension CCModelSavingable {
         
     static func performAction(action: CCModelAction) -> Any? {
-        self.nextEditTableAction()
+        self.nextEditTableAction(typeName: Self.fastModelIndex())
         switch action {
         case let .CCModelActionInitWithPrimary(initWithPrimaryProperty, value):
+            CCDBUpdateManager.shared.waitInit()
             return initWithPrimaryProperty(value)
         case let .CCModelActionQuery(query, condition: condition):
+            CCDBUpdateManager.shared.waitInit()
             return query(condition)
         case let .CCModelActionCount(count, condition: condition):
-            return count(condition)
-        case let .CCModelActionRemoveAll(containerId: containerId):
-            if let cId = containerId {
-                _removeAll(containerId: cId)
-            } else {
-                _removeAll()
-            }
+            CCDBUpdateManager.shared.waitInit()
+            return count(condition)            
         case let .CCModelActionCreateIndex(propertyName: propertyName):
             _createIndex(propertyName: propertyName)
         case let .CCModelActionRemoveIndex(propertyName: propertyName):
@@ -248,46 +246,30 @@ public extension CCModelSavingable {
     }
     
     func performAction(action: CCModelAction) -> Any? {
-        self.nextEditTableAction()
+        self.nextEditTableAction(typeName: Self.fastModelIndex())
         switch action {
         case let .CCModelActionReplaceIntoDB(containerId: containerId, top: top):
-            if let cId = containerId {
-                let updateModel = CCDBUpdateModel()
-                updateModel.containerId = cId
-                updateModel.model = self
-                updateModel.top = top
-                CCDBUpdateManager.shared.addModel(model: updateModel)
-            } else {
-                CCDBUpdateManager.shared.addModel(model: self)
-            }
-            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self) else {
+            guard let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self) else {
                 return nil
             }
             CCModelNotifierManager.shared.sendViewUpdateNotify(type: Self.self)
-        case let .CCModelActionRemove(containerId: containerId):
-            if let cId = containerId {
-                _removeFromDB(containerId: cId)
-            } else {
-                _removeFromDB()
-            }
         default:
             break
         }
         return nil
     }
     
-    func removeFromDB() {
-        self.removeFromCache()
-        performAction(action: .CCModelActionRemove(containerId: nil))
-    }
-    
-    func removeFromDB(containerId: Int) {
-        self.removeFromCache(containerId: containerId)
-        performAction(action: .CCModelActionRemove(containerId: containerId))
-    }
-    
-    static func initWithPrimaryPropertyValue(_ value: AnyHashable) -> Self? {
+    static internal func _initWithPrimaryPropertyValue(_ value: AnyHashable, needWait: Bool = true) -> Self? {
         
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return nil
+        }
+        
+        if needWait {
+            waitCacheChangeDone(mapper: mapper)
+        }
+            
         if let res = self.initWithPrimaryPropertyFromCache(value: value) as? Self {
             return res
         }
@@ -299,55 +281,289 @@ public extension CCModelSavingable {
         return res
     }
     
-    func replaceIntoDB() {
-        self.replaceIntoCache()
-        self.performAction(action: .CCModelActionReplaceIntoDB(containerId: nil, top: true))
+    static func initWithPrimaryPropertyValue(_ value: AnyHashable) -> Self? {
+        return self._initWithPrimaryPropertyValue(value, needWait: true)
+    }
+    
+    func insertMMAPCache(value: Any, columnType: CCDBColumnType, propertyName: String, index: Int, type: Any.Type = Any.self) -> CCModelSavingable? {
+        switch columnType {
+        case .CCDBColumnTypeBool:
+            if let boolValue = value as? Bool {
+                ccdb_insertMMAPCacheWithBool(boolValue, propertyName, index)
+            } else {
+                ccdb_insertMMAPCacheWithNull(propertyName, index)
+            }
+        case .CCDBColumnTypeInt:
+            if let intValue = value as? Int {
+                ccdb_insertMMAPCacheWithInt(intValue, propertyName, index)
+            } else {
+                ccdb_insertMMAPCacheWithNull(propertyName, index)
+            }
+        case .CCDBColumnTypeLong:
+            if let intValue = value as? Int {
+                ccdb_insertMMAPCacheWithInt(intValue, propertyName, index)
+            } else {
+                ccdb_insertMMAPCacheWithNull(propertyName, index)
+            }
+        case .CCDBColumnTypeString:
+            if let stringValue = value as? String {
+                ccdb_insertMMAPCacheWithString(stringValue, propertyName, index)
+            } else {
+                ccdb_insertMMAPCacheWithNull(propertyName, index)
+            }
+        case .CCDBColumnTypeDouble:
+            if let doubleValue = value as? Double {
+                ccdb_insertMMAPCacheWithDouble(doubleValue, propertyName, index)
+            } else {
+                ccdb_insertMMAPCacheWithNull(propertyName, index)
+            }
+        case .CCDBColumnTypeCustom:
+            return replaceCustomValueIntoMMAPCache(value: value, type: type, mmapIndex: index, propertyName: propertyName)
+        }
+        return nil
+    }
+    
+    func getPrimaryProperty(target:CCModelSavingable, mapper: CCModelPropertyMapper) -> PropertyInfo? {
+        var instance = target
+        let properties = mapper.properties
+        let rawPointer = instance.headPointer()
+        let primaryProperty = properties[0]
+        
+        let propAddr = rawPointer.advanced(by: primaryProperty.offset)
+        let propertyDetail = PropertyInfo(key: primaryProperty.key, type: primaryProperty.type, address: propAddr, bridged: false)
+        return propertyDetail
+    }
+    
+    func getValue(propertyDetail: PropertyInfo, mapper: CCModelPropertyMapper) -> Any? {
+        guard var value = extensions(of: propertyDetail.type).value(from: propertyDetail.address) else {
+            return nil
+        }
+        
+        if mapper.publishedTypeMapper[propertyDetail.key] != nil {
+            if let currentValue = Self.findPublisherCurrentValue(value: value, finalLevel: false) {
+                value = currentValue
+            }
+        }
+        return value
+    }
+    
+    func removeFromDB() {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper =
+                CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self),
+              let propertyDetail = getPrimaryProperty(target: self, mapper: mapper),
+              let value = getValue(propertyDetail: propertyDetail, mapper: mapper),
+              let columnType = mapper.columnType[propertyDetail.key]
+        else {
+            return
+        }
+        
+        Self.waitCacheChangeDone(mapper: mapper)
+
+        self.removeFromCache()
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(2))
+        insertMMAPCache(value: value, columnType: columnType, propertyName: propertyDetail.key, index: mapper.mmapIndex)
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(7))
+        insertMMAPCache(value: value, columnType: columnType, propertyName: "primary_key", index: mapper.mmapIndex)
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+    }
+    
+    func removeFromDB(containerId: Int) {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper =
+                CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self),
+              let propertyDetail = getPrimaryProperty(target: self, mapper: mapper),
+              let value = getValue(propertyDetail: propertyDetail, mapper: mapper),
+              let columnType = mapper.columnType[propertyDetail.key]
+        else {
+            return
+        }
+        
+        Self.waitCacheChangeDone(mapper: mapper)
+        
+        self.removeFromCache(containerId: containerId)
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(4))
+        ccdb_insertMMAPCacheWithInt(containerId, "hash_id", mapper.mmapIndex)
+        insertMMAPCache(value: value, columnType: columnType, propertyName: "primary_key", index: mapper.mmapIndex)
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+    }
+    
+    private func replaceCustomValueIntoMMAPCache(value: Any, type: Any.Type, mmapIndex: Int, propertyName: String) -> CCModelSavingable? {
+        if let customValue = value as? CCModelSavingable,
+           let propertyMapper = CCModelMapperManager.shared.getMapperWithType(type),
+           let propertyDetail = getPrimaryProperty(target: customValue, mapper: propertyMapper),
+           let value = getValue(propertyDetail: propertyDetail, mapper: propertyMapper),
+           let columnType = propertyMapper.columnType[propertyDetail.key]
+        {
+            insertMMAPCache(value: value, columnType: columnType, propertyName: propertyName, index: mmapIndex, type: propertyDetail.type)
+            return customValue
+        } else {
+            ccdb_insertMMAPCacheWithNull(propertyName, mmapIndex)
+            return nil
+        }
     }
     
     func replaceIntoDB(containerId: Int, top: Bool) {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper =
+                CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self),
+              let propertyDetail = getPrimaryProperty(target: self, mapper: mapper),
+              let value = getValue(propertyDetail: propertyDetail, mapper: mapper),
+              let columnType = mapper.columnType[propertyDetail.key]
+        else {
+            return
+        }
+        
+        Self.waitCacheChangeDone(mapper: mapper)
+        
+        self.replaceIntoDB()
+        
         self.replaceIntoCache(containerId: containerId, top: top)
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(3))
+        ccdb_insertMMAPCacheWithString("\(containerId)-\(value)", "id", mapper.mmapIndex)
+        ccdb_insertMMAPCacheWithInt(containerId, "hash_id", mapper.mmapIndex)
+        insertMMAPCache(value: value, columnType: columnType, propertyName: "primary_key", index: mapper.mmapIndex)
+        if top {
+            ccdb_insertMMAPCacheWithDouble(Date().timeIntervalSince1970, "update_time", mapper.mmapIndex)
+        } else {
+            ccdb_insertMMAPCacheWithDouble(-Date().timeIntervalSince1970, "update_time", mapper.mmapIndex)
+        }
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+        
         self.performAction(action: .CCModelActionReplaceIntoDB(containerId: containerId, top: top))
     }
     
+    func replaceIntoDB() {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+        
+        Self.waitCacheChangeDone(mapper: mapper)
+
+        self.replaceIntoCache()
+        var instance = self
+        let rawPointer = instance.headPointer()
+        let properties = mapper.properties
+        var customObjects = [CCModelSavingable]()
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(1))
+        for property in properties {
+            if mapper.inOutPropertiesMapper[property.key] != nil {
+                continue
+            }
+
+            let propAddr = rawPointer.advanced(by: property.offset)
+            guard var value = extensions(of: property.type).value(from: propAddr) else {
+                return
+            }
+
+            if mapper.publishedTypeMapper[property.key] != nil {
+                if let currentValue = Self.findPublisherCurrentValue(value: value, finalLevel: false) {
+                    value = currentValue
+                }
+            }
+            guard let columnType = mapper.columnType[property.key] else {
+                continue
+            }
+            if columnType == .CCDBColumnTypeCustom {
+                var type = property.type
+                if let realType = mapper.publishedTypeMapper[property.key] {
+                    type = realType
+                }
+                if let customObject = insertMMAPCache(value: value, columnType: columnType, propertyName: property.key, index: mapper.mmapIndex, type: type) {
+                    customObjects.append(customObject)
+                }
+            } else {
+                insertMMAPCache(value: value, columnType: columnType, propertyName: property.key, index: mapper.mmapIndex)
+            }
+        }
+        if let intoDBFunc = mapper.intoDBMapper {
+            ccdb_insertMMAPCacheWithString(intoDBFunc(instance), "CUSTOM_INOUT_PROPERTIES", mapper.mmapIndex)
+        } else {
+            ccdb_insertMMAPCacheWithNull("CUSTOM_INOUT_PROPERTIES", mapper.mmapIndex)
+        }
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+        
+        for customObject in customObjects {
+            customObject.replaceIntoDB()
+        }
+        
+        self.performAction(action: .CCModelActionReplaceIntoDB(containerId: nil, top: true))
+    }
+        
     func notiViewUpdate() {
         
     }
-    
-    static func queryAll(_ isAsc: Bool) -> [Self] {
-        if let res = self.loadAllFromCache(isAsc: isAsc) {
+        
+    static func queryAll(_ isAsc: Bool = true) -> [Self] {
+        
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return [Self]()
+        }
+        
+        mapper.cacheChangeSemaphore.wait()
+        if let res = self.loadAllFromCache(isAsc: isAsc), mapper.memoryCacheInited == true {
+            mapper.cacheChangeSemaphore.signal()
             return res as! [Self]
         }
         let condition = CCDBCondition()
         condition.ccIsAsc(isAsc: isAsc)
         guard let res = performAction(action: .CCModelActionQuery(_query, condition: condition)) as? [Self] else {
+            mapper.cacheChangeSemaphore.signal()
             return [Self]()
         }
-        CCModelCacheManager.shared.replaceQueue.async {
+        mapper.cacheChangeSemaphore.signal()
+        
+        mapper.cacheQueue.async {
+            mapper.cacheChangeSemaphore.wait()
             for obj in res {
                 obj.replaceIntoCache()
             }
+            mapper.cacheChangeSemaphore.signal()
         }
+        mapper.memoryCacheInited = true
         return res
     }
     
     static func queryAll(_ isAsc: Bool, withContainerId containerId: Int) -> [Self] {
-        if let res = self.loadAllFromCache(containerId: containerId, isAsc: isAsc) {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return [Self]()
+        }
+        
+        mapper.cacheChangeSemaphore.wait()
+        if let res = self.loadAllFromCache(containerId: containerId, isAsc: isAsc), mapper.containerMemoryCacheInited[containerId] == true {
+            mapper.cacheChangeSemaphore.signal()
             return res as! [Self]
         }
         let condition = CCDBCondition()
         condition.ccIsAsc(isAsc: isAsc).ccContainerId(containerId: containerId)
         guard let res = performAction(action: .CCModelActionQuery(_query, condition: condition)) as? [Self] else {
+            mapper.cacheChangeSemaphore.signal()
             return [Self]()
         }
-        CCModelCacheManager.shared.replaceQueue.async {
+        mapper.cacheChangeSemaphore.signal()
+        
+        mapper.cacheQueue.async {
+            mapper.cacheChangeSemaphore.wait()
             for obj in res {
                 obj.replaceIntoCache(containerId: containerId, top: !isAsc)
             }
+            mapper.cacheChangeSemaphore.signal()
         }
+        mapper.containerMemoryCacheInited[containerId] = true;
         return res
     }
     
     static func query(_ condition: CCDBCondition) -> [Self] {
+        CCDBUpdateManager.shared._replaceIntoDB()
         guard let res = performAction(action: .CCModelActionQuery(_query, condition: condition)) as? [Self] else {
             return [Self]()
         }
@@ -355,27 +571,83 @@ public extension CCModelSavingable {
     }
     
     static func removeAll() {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+        
+        waitCacheChangeDone(mapper: mapper)
+        
         self.removeAllFromCache()
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(5))
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(8))
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+        
         performAction(action: .CCModelActionRemoveAll(containerId: nil))
     }
     
     static func removeAll(containerId: Int) {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+        
+        waitCacheChangeDone(mapper: mapper)
+        
         self.removeAllFromCache(containerId: containerId)
+        
+        ccdb_beginMMAPCacheTransaction(mapper.mmapIndex, CCDBMMAPTransactionType(6))
+        ccdb_insertMMAPCacheWithInt(containerId, "hash_id", mapper.mmapIndex)
+        ccdb_commitMMAPCacheTransaction(mapper.mmapIndex)
+        
         performAction(action: .CCModelActionRemoveAll(containerId: containerId))
     }
     
-    static func count() -> Int {
+    static internal func _count(needWait: Bool = true) -> Int {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return 0
+        }
+        
+        CCDBUpdateManager.shared._replaceIntoDB()
+        
+        if needWait {
+            waitCacheChangeDone(mapper: mapper)
+        }
+
         guard let res = performAction(action: .CCModelActionCount(_count, condition: CCDBCondition())) as? Int else {
             return 0
         }
         return res
     }
     
-    static func count(_ condition: CCDBCondition) -> Int {
+    static func count() -> Int {
+        return _count(needWait: true)
+    }
+    
+    static internal func _count(_ condition: CCDBCondition, needWait:Bool = true) -> Int {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return 0
+        }
+        
+        CCDBUpdateManager.shared._replaceIntoDB()
+        
+        if needWait {
+            waitCacheChangeDone(mapper: mapper)
+        }
+        
         guard let res = performAction(action: .CCModelActionCount(_count, condition: condition)) as? Int else {
             return 0
         }
         return res
+    }
+    
+    static func count(_ condition: CCDBCondition) -> Int {
+        return _count(condition, needWait: true)
     }
     
     static func createIndex(propertyName: String) {
@@ -387,7 +659,7 @@ public extension CCModelSavingable {
     }
     
     static func addViewNotifier(notifier: @escaping ()->Void) {
-        let propertyMapper = CCModelMapperManager.shared.getMapperWithType(Self.self)
+        let propertyMapper = CCModelMapperManager.shared.getMapperWithTypeName(Self.fastModelIndex(), type: Self.self)
         propertyMapper?.viewNotifier.append(notifier)
     }
     

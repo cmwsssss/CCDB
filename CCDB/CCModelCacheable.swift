@@ -7,12 +7,17 @@
 
 import Foundation
 
+public enum CCModelCachePolicy {
+    case fastQueryAndUpdate
+    case balance
+}
+
 /**
 key-value Memory cache (Key-value式的内存缓存)
  
  CCDB writes the model objects to the memory cache before the actual database operations are performed, this protocol can also be used separately (在进行实际的数据库操作之前，CCDB会先将模型对象写入内存缓存之中，该协议也可以单独使用)
 */
-public protocol CCModelCacheable {
+public protocol CCModelCacheable: _Measurable {
     
     /**
      Replace object into memory cache (将当前模型对象写入内存缓存)
@@ -90,62 +95,213 @@ public protocol CCModelCacheable {
      
      */
     static func removeAllFromCache(containerId: Int)
+    
+    static func fastModelIndex() -> String
+
 }
 
 public extension CCModelCacheable {
     
-    
     func replaceIntoCache() {
-        let mirror:Mirror = Mirror(reflecting: self)
-        let value = mirror.children[mirror.children.startIndex].value
-        if let primaryValue = value as? AnyHashable {
-            let typeName = String(describing: Self.self)
-            CCModelCacheManager.shared.addObjectToCache(className: typeName, propertyPrimaryValue: primaryValue, object: self)
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+
+        var instance = self
+        let rawPointer = instance.headPointer()
+        let properties = mapper.properties
+        if let property = properties.first {
+
+            let propAddr = rawPointer.advanced(by: property.offset)
+            guard var value = extensions(of: property.type).value(from: propAddr) else {
+                return
+            }
+
+            if mapper.publishedTypeMapper[property.key] != nil {
+                if let currentValue = Self.findPublisherCurrentValue(value: value, finalLevel: false) {
+                    value = currentValue
+                }
+            }
+            
+            if let primaryValue = value as? AnyHashable {
+                if mapper.cachePolicy == .fastQueryAndUpdate {
+                    CCModelCacheManager.shared.addObjectToCache(className: fastModelIndex, propertyPrimaryValue: primaryValue, object: self)
+                } else {
+                    CCBalanceModelCacheManager.shared.addObjectToCache(className: fastModelIndex, propertyPrimaryValue: primaryValue, object: self)
+                }
+            }
         }
     }
     
     
-    static func loadAllFromCache(isAsc: Bool) -> [Any]? {
-        return CCModelCacheManager.shared.getObjectsFromCache(className: String(describing: Self.self), isAsc: isAsc)
+    static func loadAllFromCache(isAsc: Bool = true) -> [Any]? {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return nil
+        }
+        if mapper.cachePolicy == .fastQueryAndUpdate {
+            return CCModelCacheManager.shared.getObjectsFromCache(className: Self.fastModelIndex(), isAsc: isAsc)
+        } else {
+            return CCBalanceModelCacheManager.shared.getObjectsFromCache(className: Self.fastModelIndex(), isAsc: isAsc)
+        }
     }
     
     
     static func loadAllFromCache(containerId: Int, isAsc: Bool) -> [Any]? {
-        return CCModelCacheManager.shared.getObjectsFromCache(className: String(describing: Self.self), containerId: containerId, isAsc: isAsc)
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return nil
+        }
+        if mapper.cachePolicy == .fastQueryAndUpdate {
+            return CCModelCacheManager.shared.getObjectsFromCache(className: Self.fastModelIndex(), containerId: containerId, isAsc: isAsc)
+        } else {
+            return CCBalanceModelCacheManager.shared.getObjectsFromCache(className: Self.fastModelIndex(), containerId: containerId, isAsc: isAsc)
+        }
     }
     
     
     public static func initWithPrimaryPropertyFromCache(value : AnyHashable) -> Any? {
-        return CCModelCacheManager.shared.getObject(className: String(describing: Self.self), propertyPrimaryValue: value)
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return nil
+        }
+        if mapper.cachePolicy == .fastQueryAndUpdate {
+            return CCModelCacheManager.shared.getObject(className: Self.fastModelIndex(), propertyPrimaryValue: value)
+        } else {
+            return CCBalanceModelCacheManager.shared.getObject(className: Self.fastModelIndex(), propertyPrimaryValue: value)
+        }
     }
     
     func replaceIntoCache(containerId: Int, top: Bool) {
-        let mirror:Mirror = Mirror(reflecting: self)
-        let value = mirror.children[mirror.children.startIndex].value
-        if let primaryValue = value as? AnyHashable {
-            let typeName = String(describing: Self.self)
-            CCModelCacheManager.shared.addObjectToCache(className: typeName, propertyPrimaryValue: primaryValue, object: self)
-            CCModelCacheManager.shared.addObjectToContainer(className: typeName, propertyPrimaryValue: primaryValue, containerId: containerId, top: top)
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+
+        var instance = self
+        let rawPointer = instance.headPointer()
+        let properties = mapper.properties
+        if let property = properties.first {
+
+            let propAddr = rawPointer.advanced(by: property.offset)
+            guard var value = extensions(of: property.type).value(from: propAddr) else {
+                return
+            }
+
+            if mapper.publishedTypeMapper[property.key] != nil {
+                if let currentValue = Self.findPublisherCurrentValue(value: value, finalLevel: false) {
+                    value = currentValue
+                }
+            }
+            
+            if let primaryValue = value as? AnyHashable {
+                if mapper.cachePolicy == .fastQueryAndUpdate {
+                    CCModelCacheManager.shared.addObjectToCache(className: fastModelIndex, propertyPrimaryValue: primaryValue, object: self)
+                    CCModelCacheManager.shared.addObjectToContainer(className: fastModelIndex, propertyPrimaryValue: primaryValue, containerId: containerId, top: top)
+                } else {
+                    CCBalanceModelCacheManager.shared.addObjectToCache(className: fastModelIndex, propertyPrimaryValue: primaryValue, object: self)
+                    CCBalanceModelCacheManager.shared.addObjectToContainer(className: fastModelIndex, propertyPrimaryValue: primaryValue, containerId: containerId, top: top, object: self)
+                }
+            }
         }
     }
     
     func removeFromCache() {
-        CCModelCacheManager.shared.removeObjectFromCache(className: String(describing: Self.self), object: self)
-    }
-    
-    func removeFromCache(containerId: Int) {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
         let mirror:Mirror = Mirror(reflecting: self)
         let value = mirror.children[mirror.children.startIndex].value
         if let primaryValue = value as? AnyHashable {
-            CCModelCacheManager.shared.removeObjectFromContainerCache(className: String(describing: Self.self), propertyPrimaryValue: primaryValue, containerId: containerId)
+            if mapper.cachePolicy == .fastQueryAndUpdate {
+                CCModelCacheManager.shared.removeObjectFromCache(className: Self.fastModelIndex(), object: primaryValue)
+            } else {
+                CCBalanceModelCacheManager.shared.removeObjectFromCache(className: Self.fastModelIndex(), propertyPrimaryValue: primaryValue)
+            }
+        }
+    }
+    
+    func removeFromCache(containerId: Int) {
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+        let mirror:Mirror = Mirror(reflecting: self)
+        let value = mirror.children[mirror.children.startIndex].value
+        if let primaryValue = value as? AnyHashable {
+            if mapper.cachePolicy == .fastQueryAndUpdate {
+                CCModelCacheManager.shared.removeObjectFromContainerCache(className: Self.fastModelIndex(), propertyPrimaryValue: primaryValue, containerId: containerId)
+            } else {
+                CCBalanceModelCacheManager.shared.removeObjectFromContainerCache(className: Self.fastModelIndex(), propertyPrimaryValue: primaryValue, containerId: containerId)
+            }
         }
     }
     
     static func removeAllFromCache() {
-        CCModelCacheManager.shared.removeAllFromCache(className: String(describing: Self.self))
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+        if mapper.cachePolicy == .fastQueryAndUpdate {
+            CCModelCacheManager.shared.removeAllFromCache(className: Self.fastModelIndex())
+        } else {
+            CCBalanceModelCacheManager.shared.removeAllFromCache(className: Self.fastModelIndex())
+        }
     }
     
     static func removeAllFromCache(containerId: Int) {
-        CCModelCacheManager.shared.removeAllFromCache(className: String(describing: Self.self), containerId: containerId)
+        let fastModelIndex = Self.fastModelIndex()
+        guard let mapper = CCModelMapperManager.shared.getMapperWithTypeName(fastModelIndex, type: Self.self) else {
+            return
+        }
+        if mapper.cachePolicy == .fastQueryAndUpdate {
+            CCModelCacheManager.shared.removeAllFromCache(className: Self.fastModelIndex(), containerId: containerId)
+        } else {
+            CCBalanceModelCacheManager.shared.removeAllFromCache(className: Self.fastModelIndex(), containerId: containerId)
+        }
+    }
+    
+    static func fastModelIndex() -> String {
+        return String(describing: Self.self)
+    }
+    
+    static func waitCacheChangeDone(mapper: CCModelPropertyMapper) {
+        mapper.cacheChangeSemaphore.wait()
+        mapper.cacheChangeSemaphore.signal()
+    }
+    
+}
+
+extension CCModelCacheable {
+    
+    static func findPublisherCurrentValue(value: Any, finalLevel: Bool) -> Any? {
+        let mirror = Mirror(reflecting: value)
+        if finalLevel {
+            for child in mirror.children {
+                if child.label == "currentValue" || child.label == "value" {
+                    return child.value
+                }
+            }
+        } else {
+            for child in mirror.children {
+                if child.label == "currentValue" || child.label == "value" {
+                    return child.value
+                }
+                else {
+                    if child.label == "subject" {
+                        if let finalValue = findPublisherCurrentValue(value: child.value, finalLevel: true) {
+                            return finalValue
+                        }
+                    } else {
+                        if let finalValue = findPublisherCurrentValue(value: child.value, finalLevel: false) {
+                            return finalValue
+                        }
+                    }
+                }
+            }
+        }
+        return nil
     }
 }
