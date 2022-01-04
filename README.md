@@ -1,7 +1,7 @@
 中文版本请[点击这里](https://github.com/cmwsssss/CCDB/blob/main/README-CN.md)
 
 # What's CCDB
-CCDB is a high-performance database framework based on Sqlite3 and Swift, ideal for SwiftUI development
+CCDB is a high-performance database framework based on Sqlite3, MMAP and Swift, ideal for SwiftUI development
 
 CCDB has an OBJC version, support for dictionary->model mapping , Less code required to use, developers who use OBJC [click here](https://github.com/cmwsssss/CCDB-OBJC)
 
@@ -13,14 +13,17 @@ CCDB is very easy to use, Just one line of code to insert, query, delete and upd
 #### Efficient:
 CCDB is based on the multi-threaded model of sqlite3 and has a separate memory caching mechanism, making its performance better than direct use sqlite3 in most cases.
 
+<img width="927" alt="截屏2022-01-04 上午9 24 31" src="https://user-images.githubusercontent.com/16182417/147998019-7d0eaac6-2071-42ca-a95b-be682639b7a6.png">
+
 * Performance comparison with Realm (based on the same data model):
 
-    <img width="853" alt="截屏2021-12-13 下午3 36 12" src="https://user-images.githubusercontent.com/16182417/145770988-105bd15c-1adf-431a-8eac-ef7c0854ade2.png">
 
-**In terms of write speed, CCDB is faster than Realm, but in terms of query, CCDB is slower than Realm**
+**In terms of write speed, CCDB is faster than Realm, but in terms of querying large batches of data, CCDB is weaker than Realm.**
     
 * CCDB provides memory cache, which will greatly increase the speed when data needs to be queried twice or more.
-    <img width="952" alt="截屏2021-12-13 下午3 36 26" src="https://user-images.githubusercontent.com/16182417/145771065-db1d7b08-3150-4ead-baf2-a48d452977e4.png">
+
+<img width="927" alt="截屏2022-01-04 上午9 24 44" src="https://user-images.githubusercontent.com/16182417/147998031-f0982d17-2b0f-487f-b5a3-775a7de13877.png">
+
 
 #### SwiftUI adaptation:
 CCDB has optimized the SwiftUI adaptation, and the model properties are adapted to the @Published, meaning that any change in the value of properties will cause the UI to be refreshed
