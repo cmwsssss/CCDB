@@ -207,9 +207,12 @@ public extension CCModelSavingable {
                 }
             } else {
                 let data = rawModelData as Any
-                res.append(createModelFromData(data: data, properties: propertyMapper.properties))
+                let singleData = createModelFromData(data: data, properties: propertyMapper.properties)
+                if let model = singleData as? CCModelSavingable {
+                    model.replaceIntoDB()
+                }
+                return singleData as! T
             }
-            
             return res as! T
         } catch  {
             return res as! T
