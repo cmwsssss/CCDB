@@ -31,7 +31,7 @@ class UserDetailViewModel: ObservableObject {
 
 struct UserDetailView: View {
     
-    var viewModel: UserDetailViewModel
+    @ObservedObject var viewModel: UserDetailViewModel
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0, content: {

@@ -1,0 +1,15 @@
+{
+    "userId": "1",
+    "username": "username1",
+    "Info": "Info1",
+    "avatar": {
+        "photoId":"1",
+        "url":"Image-1"
+    },
+    "photos": [
+        {
+            "photoId":"1",
+            "url":"Image-1"
+        }
+    ]
+}

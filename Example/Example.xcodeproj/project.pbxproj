@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DA27DF5028B1E393F54E8C90 /* Pods_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D283445819CBF1D51C7E3D8F /* Pods_Example.framework */; };
+		DB4CF86A27858516002F30F3 /* User1.json in Resources */ = {isa = PBXBuildFile; fileRef = DB4CF86927858516002F30F3 /* User1.json */; };
 		DB9128732750B4C800FED687 /* ExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9128722750B4C800FED687 /* ExampleApp.swift */; };
 		DB9128752750B4C800FED687 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9128742750B4C800FED687 /* ContentView.swift */; };
 		DB9128772750B4CA00FED687 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DB9128762750B4CA00FED687 /* Assets.xcassets */; };
@@ -50,6 +51,7 @@
 		695DC87DE2F5218A2D717FDE /* Pods-Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.release.xcconfig"; path = "Target Support Files/Pods-Example/Pods-Example.release.xcconfig"; sourceTree = "<group>"; };
 		9AC018D5743A756D2E8F5AFE /* Pods-Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.debug.xcconfig"; path = "Target Support Files/Pods-Example/Pods-Example.debug.xcconfig"; sourceTree = "<group>"; };
 		D283445819CBF1D51C7E3D8F /* Pods_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DB4CF86927858516002F30F3 /* User1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = User1.json; sourceTree = "<group>"; };
 		DB91286F2750B4C800FED687 /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB9128722750B4C800FED687 /* ExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleApp.swift; sourceTree = "<group>"; };
 		DB9128742750B4C800FED687 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -197,6 +199,7 @@
 				DB9128CC2750C48E00FED687 /* User_list_1_15.json */,
 				DB9128CD2750C48E00FED687 /* JSONLoader.swift */,
 				DB9128CE2750C48E00FED687 /* User_list_16_30.json */,
+				DB4CF86927858516002F30F3 /* User1.json */,
 			);
 			path = Resource;
 			sourceTree = "<group>";
@@ -230,7 +233,7 @@
 				DB91286B2750B4C800FED687 /* Sources */,
 				DB91286C2750B4C800FED687 /* Frameworks */,
 				DB91286D2750B4C800FED687 /* Resources */,
-				512485C8E43198C4282619CD /* [CP] Embed Pods Frameworks */,
+				987A5B90DE0547A4C7ED8B22 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -325,6 +328,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DB4CF86A27858516002F30F3 /* User1.json in Resources */,
 				DB9128D22750C48F00FED687 /* User_list_16_30.json in Resources */,
 				DB91287A2750B4CA00FED687 /* Preview Assets.xcassets in Resources */,
 				DB9128772750B4CA00FED687 /* Assets.xcassets in Resources */,
@@ -372,7 +376,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		512485C8E43198C4282619CD /* [CP] Embed Pods Frameworks */ = {
+		987A5B90DE0547A4C7ED8B22 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
